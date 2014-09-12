@@ -60,7 +60,7 @@ static inline int add_to_buffer(unsigned char buffer[n], unsigned n,
 }
 
 
-
+[[combinable]]
 void uart_rx(server interface uart_rx_if c,
              server interface uart_config_if ?config,
              const static unsigned n,
@@ -180,7 +180,7 @@ void uart_rx(server interface uart_rx_if c,
         break;
       }
       break;
-    case c._input_byte() -> unsigned char data:
+    case (rdptr != wrptr) => c.input_byte() -> unsigned char data:
       if (rdptr == wrptr)
         break;
       data = buffer[rdptr];
@@ -218,6 +218,3 @@ void uart_rx(server interface uart_rx_if c,
   }
 }
 
-extends client interface uart_rx_if : {
-  extern inline unsigned char input_byte(client uart_rx_if i);
-}

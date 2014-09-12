@@ -1,8 +1,9 @@
 UART library
 ============
 
-.. xsoftip:: UART
-   :version: 3.0.0
+.. rheader::
+
+   UART |version|
 
 UART library
 ------------
@@ -88,7 +89,64 @@ Hardware characteristics
 
 TODO
 
-API
----
+Standard UART API
+-----------------
 
-TODO
+UART configuration interface
+............................
+
+.. doxygeninterface:: uart_config_if
+
+.. doxygentype:: uart_parity_t
+
+UART receiver component
+.......................
+
+.. doxygenfunction:: uart_rx
+
+UART receive interface
+......................
+
+.. doxygeninterface:: uart_rx_if
+
+UART transmitter component
+...........................
+
+.. doxygenfunction:: uart_tx
+
+.. doxygenfunction:: uart_tx_buffered
+
+UART transmit interface
+......................
+
+.. doxygeninterface:: uart_tx_if
+
+Fast/Streaming UART API
+-----------------------
+
+Streaming receiver
+..................
+
+.. doxygenfunction:: uart_rx_streaming
+.. doxygenfunction:: uart_rx_streaming_receive_byte
+
+Streaming transmitter
+.....................
+
+.. doxygenfunction:: uart_tx_streaming
+.. doxygenfunction:: uart_tx_streaming_transmit_byte
+
+Multi-UART API
+--------------
+
+Multi-UART receivers
+....................
+
+.. doxygenfunction:: multi_uart_rx
+.. doxygeninterface:: multi_uart_rx_if
+
+Multi-UART transmitters
+.......................
+
+.. doxygenfunction:: multi_uart_tx
+.. doxygeninterface:: multi_uart_tx_if

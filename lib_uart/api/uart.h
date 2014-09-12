@@ -55,7 +55,7 @@ typedef interface uart_rx_if {
    *   function is called before receiving a notification) then the return
    *   value is undefined.
    */
-  [[clears_notification]] uint8_t _input_byte(void);
+  [[clears_notification, guarded]] uint8_t input_byte(void);
 
   /** Notification that data is in the receive buffer.
    *
@@ -70,31 +70,12 @@ typedef interface uart_rx_if {
   int has_data();
 } uart_rx_if;
 
-extends client interface uart_rx_if : {
-
-  /** Get a byte from the receive buffer.
-   *
-   *   This function will wait until there is data in the receive buffer
-   *   of the uart and then fetch that data. On getting the data, it
-   *   will clear the notification flag on the interface.
-   */
-  inline uint8_t input_byte(client uart_rx_if i) {
-    if (!i.has_data()) {
-      select {
-      case i.data_ready():
-        break;
-      }
-    }
-    return i._input_byte();
-  }
-}
-
-/** UART RX server function.
+/** UART RX component.
  *
- *    This function runs a uart receive server.
+ *    This function runs a uart receiver.
  *    Bytes received by the server are buffered in the provided buffer array.
  *    When the buffer is full further incoming bytes of data will be dropped.
- *    The function never returns and will run the server idefinitely.
+ *    The function never returns and will run the server indefinitely.
  *
  *    \param i             the interface connection to the server
  *    \param buffer_size   the size of the buffer
@@ -104,6 +85,7 @@ extends client interface uart_rx_if : {
  *    \param stop_bits     the intiial number of stop bits
  *    \param p_rxd         the 1 bit port to input data on
  */
+[[combinable]]
 void uart_rx(server interface uart_rx_if i,
              server interface uart_config_if ?i_config,
              const static unsigned buffer_size,
@@ -113,7 +95,7 @@ void uart_rx(server interface uart_rx_if i,
              unsigned stop_bits,
              port p_rxd);
 
-/** Fast UART RX server function.
+/** Fast/Streaming UART RX server function.
  *
  * This function implements a fast UART. It needs an unbuffered 1-bit
  * port, a streaming channel end, and a number of port-clocks to wait
@@ -136,12 +118,34 @@ void uart_rx(server interface uart_rx_if i,
  */
 void uart_rx_streaming(in port p, streaming chanend c, int clocks);
 
+/** Receive a byte from a streaming UART receiver.
+ *
+ *  This function receives a byte from the fast/streaming UART component. It is
+ *  "select handler" so can be used within a select e.g.
+ *
+    \verbatim
+     uint8_t byte;
+     size_t index;
+     select {
+       case uart_rx_streaming_receive_byte(c, byte):
+            // use sample and index here...
+            ...
+            break;
+     ...
+    \endverbatim
+ *
+ *   The case in this select will fire when the UART component has data ready.
+ *
+ *   \param c       chanend connected to the S/PDIF receiver component
+ *   \param data    This reference parameter gets set with the incoming
+ *                  data
+ */
 #pragma select handler
 void uart_rx_streaming_receive_byte(streaming chanend c, uint8_t &data);
 
-
 /* TX */
 typedef interface uart_tx_if {
+  [[guarded]]
   void output_byte(uint8_t data);
 } uart_tx_if;
 
@@ -154,6 +158,8 @@ void uart_tx(server interface uart_tx_if i,
              unsigned stop_bits,
              port p_txd);
 
+
+[[combinable]]
 void uart_tx_buffered(server interface uart_tx_if i,
                       server interface uart_config_if ?config,
                       const static unsigned buf_length,
@@ -183,6 +189,7 @@ void multi_uart_rx(server interface multi_uart_rx_if i,
                    uart_parity_t parity, unsigned bits_per_byte,
                    unsigned stop_bits);
 
+#if 0
 #define multi_uart_rx(i, p, clk, baud, parity, bits, stop_bits) \
   {interface multi_uart_rx_buf_if i_buf; \
     par { \
@@ -190,7 +197,7 @@ void multi_uart_rx(server interface multi_uart_rx_if i,
       multi_uart_rx_pins(i_buf, p, clk, baud, parity, bits, stop_bits); \
     } \
   }
-
+#endif
 
 typedef interface multi_uart_tx_if {
   [[notification]] slave void tx_slot_available(void);
@@ -203,6 +210,11 @@ typedef interface multi_uart_tx_if {
 
 } multi_uart_tx_if;
 
+
+void multi_uart_tx(server interface multi_uart_tx_if i,
+                   port p, clock clk,
+                   uart_parity_t parity, unsigned bits_per_byte,
+                   unsigned stop_bits);
 
 
 #endif // __XC__

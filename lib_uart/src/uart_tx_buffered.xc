@@ -65,7 +65,7 @@ static inline void init_transmit(unsigned char buffer[buf_length], unsigned buf_
   t += bit_time;
 }
 
-
+[[combinable]]
 void uart_tx_buffered(server interface uart_tx_if i,
                       server interface uart_config_if ?config,
                       const static unsigned buf_length,
@@ -88,7 +88,6 @@ void uart_tx_buffered(server interface uart_tx_if i,
   int t;
   p_txd <: 1;
   while (1) {
-    #pragma ordered
     select {
     case (state != WAITING_FOR_DATA) => tmr  when timerafter(t) :> void:
       switch (state) {
@@ -125,7 +124,6 @@ void uart_tx_buffered(server interface uart_tx_if i,
       }
     break;
     // Handle client interaction with the component
-    [[independent_guard]]
     case !buffer_full(rdptr, wrptr, buf_length) => i.output_byte(unsigned char data):
       buffer[wrptr] = data;
       wrptr++;
