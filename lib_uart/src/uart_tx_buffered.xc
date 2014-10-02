@@ -66,7 +66,7 @@ static inline void init_transmit(unsigned char buffer[buf_length], unsigned buf_
 }
 
 [[combinable]]
-void uart_tx_buffered(server interface uart_tx_if i,
+void uart_tx_buffered(server interface uart_tx_buffered_if i,
                       server interface uart_config_if ?config,
                       const static unsigned buf_length,
                       unsigned baud,
@@ -124,13 +124,26 @@ void uart_tx_buffered(server interface uart_tx_if i,
       }
     break;
     // Handle client interaction with the component
-    case !buffer_full(rdptr, wrptr, buf_length) => i.output_byte(unsigned char data):
+    case i._output_byte(unsigned char data) -> int buffer_was_full:
+      if (buffer_full(rdptr, wrptr, buf_length)) {
+        buffer_was_full = 1;
+        return;
+      }
+      buffer_was_full = 0;
       buffer[wrptr] = data;
       wrptr++;
       if (wrptr == buf_length)
         wrptr = 0;
+
       init_transmit(buffer, buf_length, rdptr, wrptr, p_txd, state,
                     bit_count, t, bit_time, byte);
+      break;
+
+    case i.get_available_buffer_size(void) -> size_t available:
+      int size = rdptr - wrptr;
+      if (size < 0)
+        size += buf_length;
+      available = size;
       break;
 
     case !isnull(config) => config.set_baud_rate(unsigned baud_rate):

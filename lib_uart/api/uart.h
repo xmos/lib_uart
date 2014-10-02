@@ -55,7 +55,7 @@ typedef interface uart_rx_if {
    *   function is called before receiving a notification) then the return
    *   value is undefined.
    */
-  [[clears_notification, guarded]] uint8_t input_byte(void);
+  [[clears_notification]] uint8_t _input_byte(void);
 
   /** Notification that data is in the receive buffer.
    *
@@ -69,6 +69,26 @@ typedef interface uart_rx_if {
    */
   int has_data();
 } uart_rx_if;
+
+
+extends client interface uart_rx_if : {
+
+  /** Get a byte from the receive buffer.
+   *
+   *   This function will wait until there is data in the receive buffer
+   *   of the uart and then fetch that data. On getting the data, it
+   *   will clear the notification flag on the interface.
+   */
+  inline uint8_t input_byte(client uart_rx_if i) {
+    if (!i.has_data()) {
+      select {
+      case i.data_ready():
+        break;
+      }
+    }
+    return i._input_byte();
+  }
+}
 
 /** UART RX component.
  *
@@ -145,9 +165,19 @@ void uart_rx_streaming_receive_byte(streaming chanend c, uint8_t &data);
 
 /* TX */
 typedef interface uart_tx_if {
-  [[guarded]]
   void output_byte(uint8_t data);
 } uart_tx_if;
+
+typedef interface uart_tx_buffered_if {
+
+  size_t get_available_buffer_size(void);
+
+  [[notification]]
+  slave void ready_to_transmit(void);
+
+  [[clears_notification]]
+  int _output_byte(uint8_t data);
+} uart_tx_buffered_if;
 
 [[distributable]]
 void uart_tx(server interface uart_tx_if i,
@@ -160,7 +190,7 @@ void uart_tx(server interface uart_tx_if i,
 
 
 [[combinable]]
-void uart_tx_buffered(server interface uart_tx_if i,
+void uart_tx_buffered(server interface uart_tx_buffered_if i,
                       server interface uart_config_if ?config,
                       const static unsigned buf_length,
                       unsigned baud,

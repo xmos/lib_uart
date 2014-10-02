@@ -85,7 +85,6 @@ void uart_rx(server interface uart_rx_if c,
                                                          in buffered port:1);
   in buffered port:1 &p_rxd = *pp_rxd;
   while (1) {
-    #pragma ordered
     select {
     // The following cases implement the uart state machine
     case (state == WAITING_FOR_INPUT || state == WAITING_FOR_HIGH) =>
@@ -180,7 +179,7 @@ void uart_rx(server interface uart_rx_if c,
         break;
       }
       break;
-    case (rdptr != wrptr) => c.input_byte() -> unsigned char data:
+    case c._input_byte() -> unsigned char data:
       if (rdptr == wrptr)
         break;
       data = buffer[rdptr];
@@ -218,3 +217,7 @@ void uart_rx(server interface uart_rx_if c,
   }
 }
 
+
+extends client interface uart_rx_if : {
+  extern inline uint8_t input_byte(client uart_rx_if i);
+}

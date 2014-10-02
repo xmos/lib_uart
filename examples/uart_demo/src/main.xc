@@ -35,11 +35,14 @@ void app(client uart_tx_if uart_tx, client uart_rx_if uart_rx)
   printstrln(". Done.");
 }
 
+void test() { while (1);}
+
 /* "main" function that sets up two uarts and the application */
 int main() {
   interface uart_rx_if i_rx;
   interface uart_tx_if i_tx;
   par {
+    on tile[0]: test();
     on tile[0]: uart_tx(i_tx, null,
                         BAUD_RATE, UART_PARITY_NONE, 8, 1,
                         p_uart_tx);

@@ -179,8 +179,8 @@ int main() {
   uart_config_if i_rx_config, i_tx_config;
 
   par {
-    on tile[1] : uart_tx_buffered(i_tx, i_tx_config, BUFFER_SIZE,
-                                  115200, UART_PARITY_NONE, 8, 1, p_tx);
+    on tile[1] : uart_tx(i_tx, i_tx_config,
+                         115200, UART_PARITY_NONE, 8, 1, p_tx);
     on tile[0] : uart_rx(i_rx, i_rx_config, BUFFER_SIZE,
                          115200, UART_PARITY_NONE, 8, 1, p_rx);
     on tile[0] : {
