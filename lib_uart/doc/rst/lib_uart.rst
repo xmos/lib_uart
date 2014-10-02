@@ -1,33 +1,4 @@
-UART library
-============
-
-.. rheader::
-
-   UART |version|
-
-UART library
-------------
-
-A software defined, industry-standard, UART (**U** |-| niversal **A**
-|-| synchronous **R** |-| eceiver/**T** |-| ransmitter) library
-that allows you to control an UART serial connection via the
-xCORE GPIO hardware-response ports. This library is controlled
-via C using the XMOS multicore extensions and can either act as UART master or slave.
-
-Features
-........
-
- * UART receive and transmit
- * Supports speeds up to 10MBit/s
- * Half-duplex handshaking mode (applicable to RS485)
- * Efficient multi-uart mode for implementing multiple connections
-
-Components
-..........
-
- * Standard UART mode
- * Fast streaming UART mode
- * Multi-UART mode
+.. include:: ../../../README.rst
 
 Resource Usage
 ..............

@@ -1,11 +1,14 @@
-XMOS UART Library
-.................
+UART library
+============
+
+Summary
+-------
 
 A software defined, industry-standard, UART (Universal Asynchronous
-Receiver/Transmitter) component that allows you to control an UART
-serial connection via the xCORE GPIO hardware-response ports. This
-component is controlled via C using the XMOS multicore extensions and
-can either act as UART master or slave.
+Receiver/Transmitter) library
+that allows you to control an UART serial connection via the
+xCORE GPIO hardware-response ports. This library is controlled
+via C using the XMOS multicore extensions and can either act as UART master or slave.
 
 Features
 ........
@@ -15,8 +18,8 @@ Features
  * Half-duplex handshaking mode (applicable to RS485)
  * Efficient multi-uart mode for implementing multiple connections
 
-Configurations
-..............
+Components
+..........
 
  * Standard UART mode
  * Fast streaming UART mode
