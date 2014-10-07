@@ -55,6 +55,7 @@ static void uart_test(client uart_tx_if i_uart_tx,
   int result = 1;
   debug_printf("Performing basic loopback test.\n");
   i_uart_tx.output_byte(0x0);
+
   byte = i_uart_rx.input_byte();
   result &= (byte == 0x0);
 
@@ -202,8 +203,11 @@ int main() {
     on tile[0] : uart_rx(i_rx, i_rx_config, BUFFER_SIZE,
                          115200, UART_PARITY_NONE, 8, 1, p_rx);
     on tile[0] : {
-      //unsigned rates[] = {500000, 2400, 9600, 19200};
+      #if SMOKE_TEST
       unsigned rates[] = {500000};
+      #else
+      unsigned rates[] = {2400, 9600, 19200};
+      #endif
       for (int i = 0; i < ARRAY_SIZE(rates); i++)
         uart_test(i_tx, i_tx_config, i_rx, i_rx_config, rates[i]);
       _Exit(0);

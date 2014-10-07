@@ -15,12 +15,28 @@ components are tested.
 xmostest.build("app_uart_test")
 
 resources = xmostest.request_resource("xsim")
+
+
 output = xmostest.run_on_simulator(resources['xsim'],
-                                   'app_uart_test/bin/app_uart_test.xe',
+                                   'app_uart_test/bin/smoke/app_uart_test_smoke.xe',
                                    xscope_io=True,
                                    loopback=[{'from':'tile[0]:XS1_PORT_1A',
                                               'to':'tile[1]:XS1_PORT_1B'}])
 
-xmostest.interpret_results(output, product = "lib_uart", group = "sim_regression")
+xmostest.interpret_results(output, product = "lib_uart",
+                           group = "sim_regression")
+
+if xmostest.get_testrun_type() != 'smoke':
+    output = xmostest.run_on_simulator(resources['xsim'],
+                                       'app_uart_test/bin/full/app_uart_test_full.xe',
+                                       xscope_io=True,
+                                       loopback=[{'from':'tile[0]:XS1_PORT_1A',
+                                                  'to':'tile[1]:XS1_PORT_1B'}])
+
+    xmostest.interpret_results(output, product = "lib_uart",
+                               group = "sim_regression")
+else:
+    xmostest.note_skipped_tests()
+
 
 xmostest.finish()
