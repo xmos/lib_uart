@@ -10,6 +10,10 @@
 #include <xscope.h>
 #include "xassert.h"
 
+#ifndef UART_TX_DISABLE_DYNAMIC_CONFIG
+#define UART_TX_DISABLE_DYNAMIC_CONFIG 0
+#endif
+
 static inline int parity32(unsigned x, enum uart_parity_t parity)
 {
   // To compute even / odd parity the checksum should be initialised
@@ -29,42 +33,43 @@ void uart_tx(server interface uart_tx_if i,
              uart_parity_t parity,
              unsigned bits_per_byte,
              unsigned stop_bits,
-             port p_txd)
+             client output_gpio_if p_txd)
 {
   int bit_time = XS1_TIMER_HZ / baud;
   timer tmr;
-
-  p_txd <: 1;
+  assert(!UART_TX_DISABLE_DYNAMIC_CONFIG || isnull(config));
+  p_txd.output(1);
   while (1) {
     select {
-    case i.output_byte(unsigned char data):
+    case i.write(unsigned char data):
       // Trace the outgoing data
       xscope_char(UART_TX_VALUE, data);
       int t;
       // Output start bit
-      p_txd <: 0;
+      p_txd.output(0);
       tmr :> t;
       t += bit_time;
       unsigned byte = data;
       // Output data bits
       for (int j = 0; j < bits_per_byte; j++) {
         tmr when timerafter(t) :> void;
-        p_txd <: >> byte;
+        p_txd.output(byte & 1);
+        byte >>= 1;
         t += bit_time;
       }
       // Output parity
       if (parity != UART_PARITY_NONE) {
         tmr when timerafter(t) :> void;
-        p_txd <: parity32(data, parity);
+        p_txd.output(parity32(data, parity));
         t += bit_time;
       }
       // Output stop bits
       tmr when timerafter(t) :> void;
-      p_txd <: 1;
+      p_txd.output(1);
       t += bit_time * stop_bits;
       tmr when timerafter(t) :> void;
       break;
-
+#if !UART_TX_DISABLE_DYNAMIC_CONFIG
     case !isnull(config) => config.set_baud_rate(unsigned baud_rate):
       bit_time = XS1_TIMER_HZ / baud_rate;
       break;
@@ -77,6 +82,7 @@ void uart_tx(server interface uart_tx_if i,
     case !isnull(config) => config.set_bits_per_byte(unsigned bpb):
       bits_per_byte = bpb;
       break;
+#endif
     }
   }
 }

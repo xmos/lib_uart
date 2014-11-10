@@ -3,60 +3,59 @@
 Resource Usage
 ..............
 
-.. list-table::
-   :header-rows: 1
-   :class: wide vertical-borders horizontal-borders
-
-   * - Configuration
-     - Pins
-     - Ports
-     - Clocks
-     - Ram
-     - Logical cores
-   * - Standard RX
-     - 1
-     - 1 x 1-bit
-     - 0
-     - ~1.2k
-     - 1
-   * - Standard TX
-     - 1
-     - 1 x 1-bit
-     - 0
-     - ~1.2k
-     - 0 :sup:`1`
-   * - Fast/Streaming RX
-     - 1
-     - 1 x 1-bit
-     - 1
-     - ~1.2k
-     - 1
-   * - Fast/Streaming TX
-     - 1
-     - 1 x 1-bit
-     - 1
-     - ~1.2k
-     - 1
-   * - Multi-UART RX
-     - 1
-     - 1 x 1-bit
-     - 1
-     - ~1.2k
-     - 1
-   * - Multi-UART TX
-     - 1
-     - 1 x 1-bit
-     - 1
-     - ~1.2k
-     - 1
-
-:sup:`1` By default the stanard UART TX configuration does not take any
-logical cores of its own but requires processing on the core the
-application is running on.
+TODO
 
 
 Hardware characteristics
 ------------------------
+
+TODO
+
+Usage
+-----
+
+The are four ways to use the UART library detailed in the table below.
+
+.. list-table::
+ :header-rows: 1
+
+ * - UART type
+   - Description
+ * - Standard
+   - Standard UARTs provide a flexible, fully configurable UART for
+     speeds up to 115200 baud. The UART connects to ports via the GPIO
+     library (reference??) so can be used with single bits of
+     multi-bit ports. Transmit can be buffered or unbuffered. The UART
+     components runs on a logical core but are combinable so can be
+     run with other tasks on the same core (though the timing may be affected).
+ * - Fast/streaming
+   - The fast/streaming UART components provide a fixed configuration
+     fast UART that streams data in and out via a streaming channel.
+ * - Half-duplex
+   - The half-duplex component performs receive and transmit on the
+     same data line. The application controls the direction of the
+     UART at runtime. It is particularly useful for RS485 connections (link?)
+ * - Multi-UART
+   - The multi-UART components efficiently run several UARTS on the
+     same core using a multibit port.
+
+Standard UART usage
+...................
+
+TODO
+
+Fast/Streaming UART usage
+.........................
+
+TODO
+
+Half-duplex UART usage
+......................
+
+TODO
+
+Multi-UART usage
+................
 
 TODO
 
@@ -68,56 +67,109 @@ UART configuration interface
 
 .. doxygeninterface:: uart_config_if
 
-.. doxygentype:: uart_parity_t
+|newpage|
+
+.. doxygenenum:: uart_parity_t
+
+|newpage|
 
 UART receiver component
 .......................
 
 .. doxygenfunction:: uart_rx
 
+|newpage|
+
 UART receive interface
 ......................
 
 .. doxygeninterface:: uart_rx_if
 
-UART transmitter component
+|newpage|
+
+UART transmitter components
 ...........................
 
 .. doxygenfunction:: uart_tx
 
+|newpage|
+
 .. doxygenfunction:: uart_tx_buffered
+
+|newpage|
 
 UART transmit interface
 ......................
 
 .. doxygeninterface:: uart_tx_if
 
-Fast/Streaming UART API
+|newpage|
+
+UART transmit interface (buffered)
+..................................
+
+.. doxygeninterface:: uart_tx_buffered_if
+
+|newpage|
+
+Fast/Streaming API
 -----------------------
 
 Streaming receiver
 ..................
 
 .. doxygenfunction:: uart_rx_streaming
-.. doxygenfunction:: uart_rx_streaming_receive_byte
+.. doxygenfunction:: uart_rx_streaming_read_byte
 
 Streaming transmitter
 .....................
 
 .. doxygenfunction:: uart_tx_streaming
-.. doxygenfunction:: uart_tx_streaming_transmit_byte
+.. doxygenfunction:: uart_tx_streaming_write_byte
+
+Half-Duplex API
+---------------
+
+Half-duplex component
+.....................
+
+.. doxygenfunction:: uart_half_duplex
+
+|newpage|
+
+Half-duplex control interface
+.............................
+
+.. doxygenenum:: uart_half_duplex_mode_t
+
+.. doxygeninterface:: uart_control_if
+
 
 Multi-UART API
 --------------
 
-Multi-UART receivers
-....................
+Multi-UART receiver
+...................
 
 .. doxygenfunction:: multi_uart_rx
+
+|newpage|
+
+Multi-UART receive interface
+............................
+
 .. doxygeninterface:: multi_uart_rx_if
 
-Multi-UART transmitters
-.......................
+|newpage|
+
+Multi-UART transmitter
+......................
 
 .. doxygenfunction:: multi_uart_tx
+
+|newpage|
+
+Multi-UART transmit interface
+............................
+
 .. doxygeninterface:: multi_uart_tx_if

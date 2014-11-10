@@ -11,6 +11,10 @@
 #include <xscope.h>
 #include "xassert.h"
 
+#ifndef UART_TX_DISABLE_DYNAMIC_CONFIG
+#define UART_TX_DISABLE_DYNAMIC_CONFIG 0
+#endif
+
 enum uart_tx_state {
   WAITING_FOR_DATA,
   OUTPUTTING_DATA_BIT,
@@ -40,7 +44,8 @@ static inline int buffer_full(int rdptr, int wrptr, int buf_length)
 }
 
 static inline void init_transmit(unsigned char buffer[buf_length], unsigned buf_length,
-                                 int &rdptr, int &wrptr, out port p_txd,
+                                 int &rdptr, int &wrptr,
+                                 client output_gpio_if p_txd,
                                  enum uart_tx_state &state,
                                  unsigned &bit_count, int &t,
                                  int bit_time,
@@ -60,7 +65,7 @@ static inline void init_transmit(unsigned char buffer[buf_length], unsigned buf_
   state = OUTPUTTING_DATA_BIT;
   bit_count = 0;
   // Output start bit
-  p_txd <: 0;
+  p_txd.output(0);
   tmr :> t;
   t += bit_time;
 }
@@ -73,7 +78,7 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
                       uart_parity_t parity,
                       unsigned bits_per_byte,
                       unsigned stop_bits,
-                      port p_txd)
+                      client output_gpio_if p_txd)
 {
   unsigned char buffer[buf_length];
   int bit_time = XS1_TIMER_HZ / baud;
@@ -83,16 +88,18 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
   int rdptr = 0, wrptr = 0;
   unsigned bit_count, stop_bit_count;
 
+  assert(!UART_TX_DISABLE_DYNAMIC_CONFIG || isnull(config));
+
   stop_bits += 1;
 
   int t;
-  p_txd <: 1;
+  p_txd.output(1);
   while (1) {
     select {
     case (state != WAITING_FOR_DATA) => tmr  when timerafter(t) :> void:
       switch (state) {
       case OUTPUTTING_DATA_BIT:
-        p_txd <: (byte >> bit_count);
+        p_txd.output((byte >> bit_count));
         t += bit_time;
         bit_count++;
         if (bit_count == bits_per_byte) {
@@ -106,13 +113,13 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
         break;
       case OUTPUTTING_PARITY_BIT:
         int val = parity32(byte, parity);
-        p_txd <: val;
+        p_txd.output(val);
         t += bit_time;
         stop_bit_count = stop_bits;
         state = OUTPUTTING_STOP_BIT;
         break;
       case OUTPUTTING_STOP_BIT:
-        p_txd <: 1;
+        p_txd.output(1);
         t += bit_time;
         stop_bit_count--;
         if (stop_bit_count == 0) {
@@ -124,7 +131,7 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
       }
     break;
     // Handle client interaction with the component
-    case i._output_byte(unsigned char data) -> int buffer_was_full:
+    case i.write(unsigned char data) -> int buffer_was_full:
       if (buffer_full(rdptr, wrptr, buf_length)) {
         buffer_was_full = 1;
         return;
@@ -141,11 +148,12 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
 
     case i.get_available_buffer_size(void) -> size_t available:
       int size = rdptr - wrptr;
-      if (size < 0)
-        size += buf_length;
+      if (size <= 0)
+        size += buf_length - 1;
       available = size;
       break;
 
+#if !UART_TX_DISABLE_DYNAMIC_CONFIG
     case !isnull(config) => config.set_baud_rate(unsigned baud_rate):
       bit_time = XS1_TIMER_HZ / baud_rate;
       state = WAITING_FOR_DATA;
@@ -171,6 +179,7 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
       init_transmit(buffer, buf_length, rdptr, wrptr, p_txd, state,
                     bit_count, t, bit_time, byte);
       break;
+#endif
     }
   }
 }

@@ -8,20 +8,21 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <xs1.h>
+#include <gpio.h>
 
-// This component will only work in xC.
 #ifdef __XC__
 
 /** Type representing the parity of a UART */
 typedef enum uart_parity_t {
-  UART_PARITY_EVEN = 0, ///< Even parity
-  UART_PARITY_ODD = 1,  ///< Odd parity
-  UART_PARITY_NONE      ///< No parity
+  UART_PARITY_EVEN = 0, ///< Even parity.
+  UART_PARITY_ODD = 1,  ///< Odd parity.
+  UART_PARITY_NONE      ///< No parity.
 } uart_parity_t;
 
 /** UART configuration interface.
  *
- *  This interfaces enables dynamic reconfiguration of a UART.
+ *  This interface enables dynamic reconfiguration of a UART. It is used by
+ *  several UART components to provide a method of configuration.
  */
 typedef interface uart_config_if {
   /** Set the baud rate of a UART.
@@ -42,6 +43,8 @@ typedef interface uart_config_if {
 } uart_config_if;
 
 
+/*---------------------- Receiver API ---------------------------*/
+
 /** UART RX interface.
  *
  *   This interface provides clients access to buffer uart receive
@@ -55,13 +58,13 @@ typedef interface uart_rx_if {
    *   function is called before receiving a notification) then the return
    *   value is undefined.
    */
-  [[clears_notification]] uint8_t _input_byte(void);
+  [[clears_notification]] uint8_t read(void);
 
   /** Notification that data is in the receive buffer.
    *
    *   This notification function can be selected on by the client and
    *   will event when the is data in the receive buffer. After this
-   *   notification the client should call the input_byte() function.
+   *   notification the client should call the read() function.
    */
   [[notification]] slave void data_ready(void);
 
@@ -69,7 +72,6 @@ typedef interface uart_rx_if {
    */
   int has_data();
 } uart_rx_if;
-
 
 extends client interface uart_rx_if : {
 
@@ -79,64 +81,66 @@ extends client interface uart_rx_if : {
    *   of the uart and then fetch that data. On getting the data, it
    *   will clear the notification flag on the interface.
    */
-  inline uint8_t input_byte(client uart_rx_if i) {
+  inline uint8_t wait_for_data_and_read(client uart_rx_if i) {
     if (!i.has_data()) {
       select {
       case i.data_ready():
         break;
       }
     }
-    return i._input_byte();
+    return i.read();
   }
 }
 
-/** UART RX component.
+/** UART RX.
  *
  *    This function runs a uart receiver.
- *    Bytes received by the server are buffered in the provided buffer array.
+ *    Bytes received by the this task are buffered.
  *    When the buffer is full further incoming bytes of data will be dropped.
- *    The function never returns and will run the server indefinitely.
+ *    The function never returns and will run indefinitely.
  *
- *    \param i             the interface connection to the server
+ *    \param i_data        the interface connection allowing clients to
+ *                         receive data
+ *    \param i_config      the interface connection allowing clients to
+ *                         reconfigure the UART
  *    \param buffer_size   the size of the buffer
  *    \param baud          the initial baud rate
  *    \param parity        the intiial parity setting
  *    \param bits_per_byte the initial number of bits per byte
  *    \param stop_bits     the intiial number of stop bits
- *    \param p_rxd         the 1 bit port to input data on
+ *    \param p_rxd         the gpio interface to input data on
  */
 [[combinable]]
-void uart_rx(server interface uart_rx_if i,
+void uart_rx(server interface uart_rx_if i_data,
              server interface uart_config_if ?i_config,
              const static unsigned buffer_size,
              unsigned baud,
              enum uart_parity_t parity,
              unsigned bits_per_byte,
              unsigned stop_bits,
-             port p_rxd);
+             client input_gpio_if p_rxd);
 
-/** Fast/Streaming UART RX server function.
+/** Fast/Streaming UART RX.
  *
- * This function implements a fast UART. It needs an unbuffered 1-bit
- * port, a streaming channel end, and a number of port-clocks to wait
- * between bits. It receives a start bit, 8 bits, and a stop bit, and
- * transmits the 8 bits over the streaming channel end as a single token.
+ * This function implements a fast UART. The UART configuration is
+ * fixed to a single start bit, 8 bits per byte, and a single stop bit.
  * On a 62.5 MIPS thread this function should be able to keep up with a 10
  * MBit UART sustained (provided that the streaming channel can keep up
  * with it too).
  *
  * This function does not return.
  *
- * \param p      input port, 1 bit port on which data comes in
+ * \param p      input port, 1 bit port on which data comes in.
  *
- * \param c      output streaming channel - read bytes of this channel (or
- *               words if you want to read 4 bytes at a time)
+ * \param c      output streaming channel to connect to the application.
  *
- * \param clocks number of clock ticks between bits. This number depends on the clock
- *               that you have attached to port p; assuming it is the standard 100 Mhz
- *               reference clock then clocks should be at least 10.
+ * \param ticks_per_bit  number of clock ticks between bits.
+ *                       This number depends on the clock that is
+ *                       attached to port p. If it is the
+ *                       100 Mhz reference clock then this value
+ *                       should be at least 10.
  */
-void uart_rx_streaming(in port p, streaming chanend c, int clocks);
+void uart_rx_streaming(in port p, streaming chanend c, int ticks_per_bit);
 
 /** Receive a byte from a streaming UART receiver.
  *
@@ -156,96 +160,311 @@ void uart_rx_streaming(in port p, streaming chanend c, int clocks);
  *
  *   The case in this select will fire when the UART component has data ready.
  *
- *   \param c       chanend connected to the S/PDIF receiver component
+ *   \param c       chanend connected to the streaming UART receiver component
  *   \param data    This reference parameter gets set with the incoming
  *                  data
  */
 #pragma select handler
-void uart_rx_streaming_receive_byte(streaming chanend c, uint8_t &data);
+void uart_rx_streaming_read_byte(streaming chanend c, uint8_t &data);
 
-/* TX */
+/*---------------------- Transmitter API ---------------------------*/
+
+/** UART transmit interface.
+ *
+ *  This interface provides functions for transmitting data on an
+ *  unbuffered UART.
+ */
 typedef interface uart_tx_if {
-  void output_byte(uint8_t data);
+
+  /** Write a byte to a UART.
+   *
+   *  This function writes a byte of data to a UART. It will output
+   *  immediately and block until the data is output.
+   *
+   *  \param data  The data to write.
+   */
+  void write(uint8_t data);
 } uart_tx_if;
 
-typedef interface uart_tx_buffered_if {
 
-  size_t get_available_buffer_size(void);
+/** UART transmitter.
+ *
+ *  This function implements an unbuffered UART transmitter.
+ *
+ *    \param   i_data      interface enabling client to send data.
+ *    \param   i_config    interface enabling client to configure the UART.
+ *    \param baud          the initial baud rate.
+ *    \param parity        the intiial parity setting.
+ *    \param bits_per_byte the initial number of bits per byte.
+ *    \param stop_bits     the intiial number of stop bits.
+ *    \param p_txd         the gpio interface to output data on.
 
-  [[notification]]
-  slave void ready_to_transmit(void);
-
-  [[clears_notification]]
-  int _output_byte(uint8_t data);
-} uart_tx_buffered_if;
-
+ */
 [[distributable]]
-void uart_tx(server interface uart_tx_if i,
+void uart_tx(server interface uart_tx_if i_data,
              server interface uart_config_if ?i_config,
              unsigned baud,
              uart_parity_t parity,
              unsigned bits_per_byte,
              unsigned stop_bits,
-             port p_txd);
+             client output_gpio_if p_txd);
 
+/** UART transmit interface (buffered).
+ *
+ *  This interface contains functions to write to a buffered UART and
+ *  manage the buffering.
+ *
+ */
+typedef interface uart_tx_buffered_if {
 
+  /** Write a byte to a UART.
+   *
+   *  This function writes a byte of data to a UART. It will place the
+   *  data in the output buffer queue to write and then return. If the
+   *  buffer is full then the data is discarded.
+   *
+   *  \param data  The data to write.
+   *
+   *  \returns     non-zero if the write was succesfully. If the buffer was
+   *               full then the function will return zero.
+   */
+  [[clears_notification]]
+  int write(uint8_t data);
+
+  /** Ready to transmit notification.
+   *
+   *  This notification will occur when the UART is ready to transmit (either
+   *  intially or after a write() call when there is space in the buffer).
+   */
+  [[notification]]
+  slave void ready_to_transmit(void);
+
+  /** Get avaiable buffer size.
+   *
+   *  This function returns the number of bytes remaining in the buffer that
+   *  can be filled by write() calls.
+   */
+  size_t get_available_buffer_size(void);
+} uart_tx_buffered_if;
+
+/** UART transmitter (buffered).
+ *
+ *  This function implements a UART transmitter. Data sent to the task will
+ *  be placed in a buffer and sent at the rate of the UART.
+ *
+ *    \param i_data        interface enabling client to send data.
+ *    \param i_config      interface enabling client to configure the UART.
+ *    \param buffer_size   the size of the transmit buffer in bytes.
+ *    \param baud          the initial baud rate.
+ *    \param parity        the intiial parity setting.
+ *    \param bits_per_byte the initial number of bits per byte.
+ *    \param stop_bits     the intiial number of stop bits.
+ *    \param p_txd         the gpio interface to output data on.
+ */
 [[combinable]]
-void uart_tx_buffered(server interface uart_tx_buffered_if i,
-                      server interface uart_config_if ?config,
-                      const static unsigned buf_length,
+void uart_tx_buffered(server interface uart_tx_buffered_if i_data,
+                      server interface uart_config_if ?i_config,
+                      const static unsigned buffer_size,
                       unsigned baud,
                       uart_parity_t parity,
                       unsigned bits_per_byte,
                       unsigned stop_bits,
-                      port p_txd);
+                      client output_gpio_if p_txd);
 
-/* HALF DUPLEX */
+/** Fast/Streaming UART TX.
+ *
+ * This function implements a fast UART transmitter.
+ * It needs an unbuffered 1-bit
+ * port, a streaming channel end, and a number of port-clocks to wait
+ * between bits. It receives a start bit, 8 bits, and a stop bit, and
+ * transmits the 8 bits over the streaming channel end as a single token.
+ * On a 62.5 MIPS thread this function should be able to keep up with a 10
+ * MBit UART sustained (provided that the streaming channel can keep up
+ * with it too).
+ *
+ * This function does not return.
+ *
+ * \param p      input port, 1 bit port on which data comes in.
+ *
+ * \param c      output streaming channel to connect to the application.
+ *
+ * \param ticks_per_bit  number of clock ticks between bits.
+ *                       This number depends on the clock that is
+ *                       attached to port p. If it is the
+ *                       100 Mhz reference clock then this value
+ *                       should be at least 10.
+ */
+void uart_tx_streaming(in port p, streaming chanend c, int ticks_per_bit);
 
-// TODO
+/** Write a byte to a streaming UART transmitter.
+ *
+ *  This function writes a
+ *   \param c       chanend connected to the streaming UART Tx component
+ *   \param data    The data to send.
+ */
+void uart_tx_streaming_write_byte(streaming chanend c, uint8_t data);
 
-/* MULTI UARTS */
 
+/*---------------------- Half Duplex API ---------------------------*/
+
+/** Type representing the mode (direction) of a uart. */
+typedef enum uart_half_duplex_mode_t {
+  UART_RX_MODE, ///<  Uart is in receive mode.
+  UART_TX_MODE  ///<  Uart is in transmit mode.
+} uart_half_duplex_mode_t;
+
+/** Interface to control the mode of a half-duplex UART */
+typedef interface uart_control_if {
+  /** Set the mode of the UART.
+   *
+   *  This function can be used to control whether the UART is in send or
+   *  receive mode.
+   */
+  void set_mode(uart_half_duplex_mode_t mode);
+} uart_control_if;
+
+/** Half duplex UART.
+ *
+ *  This function implements a UART that can either transmit or receive on
+ *  the same wire. The application explicitly control whether the component
+ *  is in transmit or receive mode.
+ *
+ *  \param i_tx           interface for transmitting data.
+ *  \param i_rx           interface for receiving data.
+ *  \param i_control      interface for controlling the direction of the UART.
+ *  \param i_config       interface for configuring the UART.
+ *  \param tx_buf_length  the size of the transmit buffer (in bytes).
+ *  \param rx_buf_length  the size of the receive buffer (in bytes).
+ *  \param p_uart         the 1-bit port to send/recieve the UART signals.
+ */
+void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
+                      server interface uart_rx_if i_rx,
+                      server interface uart_control_if i_control,
+                      server interface uart_config_if ?i_config,
+                      const static unsigned tx_buf_length,
+                      const static unsigned rx_buf_length,
+                      port p_uart);
+
+/*---------------------- Multi-UART API ---------------------------*/
+
+/** Multi-UART receive interface */
 typedef interface multi_uart_rx_if {
 
+  /** Read a byte for the next UART with ready data.
+   *
+   *  This function will read out a byte from the next UART with data available.
+   *  If several UARTS have data available then the data is read out in a
+   *  round-robin fashion.
+   *
+   *  \param  index        This reference parameter is set to the index of
+   *                       the UART providing data
+   *  \param  is_valid     This reference paramster is set to non-zero if the
+   *                       byte is valid. It is set to zero if there it is
+   *                       not-valid (e.g. in the case of a parity error).
+   *
+   *  \returns             The byte of data from the UART.
+   */
   [[clears_notification]]
-  uint8_t get_data(size_t &index, int &is_valid);
+  uint8_t read(size_t &index, int &is_valid);
 
+  /** Data ready notification.
+   *
+   *  This notification will be signalled when there is data available in
+   *  one of the UARTs.
+   */
   [[notification]] slave void data_ready(void);
-
 } multi_uart_rx_if;
 
+/** Multi-UART receiver.
+ *
+ *  This function implements multiple UART receivers on a multi-bit port. The
+ *  UARTS all have the same baud rate.
+ *  The parity, bits per byte and number of stop bits
+ *  is the same for all UARTs and cannot be changed dynamically.
+ *
+ *  \param  i               the interface for getting data from the task.
+ *  \param  p               the multibit port.
+ *  \param  clk             a clock block for the component to use. This needs
+ *                          to be set to run of the reference clock (the default
+ *                          state for clock blocks).
+ *  \param  num_uarts       the number of uarts to run (must be less than or
+ *                          equal to the width of \p)
+ *  \param  baud            baud rate.
+ *  \param  parity          the parity of the UART.
+ *  \param  bits_per_byte   bits per byte.
+ *  \param  stop_bits       number of stop bits.
+ */
 void multi_uart_rx(server interface multi_uart_rx_if i,
                    port p, clock clk,
-                   uart_parity_t parity, unsigned bits_per_byte,
+                   size_t num_uarts,
+                   unsigned baud,
+                   enum uart_parity_t parity,
+                   unsigned bits_per_byte,
                    unsigned stop_bits);
 
-#if 0
-#define multi_uart_rx(i, p, clk, baud, parity, bits, stop_bits) \
-  {interface multi_uart_rx_buf_if i_buf; \
-    par { \
-      multi_uart_rx_buffer(i, i_buf); \
-      multi_uart_rx_pins(i_buf, p, clk, baud, parity, bits, stop_bits); \
-    } \
-  }
-#endif
-
+/** Multi-UART transmit interface */
 typedef interface multi_uart_tx_if {
-  [[notification]] slave void tx_slot_available(void);
 
+  /** Check whether transmit slot is free.
+   *
+   *  This function checks whether the application can write data to
+   *  a specific UART.
+   *
+   *  \param  index     The index of the UART to check.
+   *  \returns          non-zero if the slot is free (i.e. data can be sent).
+   */
   [[clears_notification]]
   int is_tx_slot_free(size_t index);
 
+  /** Write to a UART.
+   *
+   *  This function writes a byte of data to a UART. This byte will be buffered
+   *  to send. If the transmit buffer for
+   *  that UART is not available then the data is ignored (use
+   *  is_tx_slot_free() to determine availability).
+   *
+   *  \param  index      The index of the UART to write to.
+   *  \param  data       The data to write.
+   */
   [[clears_notification]]
-  void output_byte(size_t index, uint8_t data);
+  void write(size_t index, uint8_t data);
+
+  /** Transmit slot available.
+   *
+   *  This notification is signalled when it is possible to
+   *  send data to one of the UARTs.
+   */
+  [[notification]] slave void tx_slot_available(void);
 
 } multi_uart_tx_if;
 
-
+/** Multi-UART transmitter.
+ *
+ *  This function implements multiple UART transmiiters on a multi-bit port. The
+ *  UARTS all have the same baud rate.
+ *  The parity, bits per byte and number of stop bits
+ *  is the same for all UARTs and cannot be changed dynamically.
+ *
+ *  \param  i               the interface for sending data to the task.
+ *  \param  p               the multibit port.
+ *  \param  clk             a clock block for the component to use. This needs
+ *                          to be set to run of the reference clock (the default
+ *                          state for clock blocks).
+ *  \param  num_uarts       the number of uarts to run (must be less than or
+ *                          equal to the width of \p)
+ *  \param  baud            baud rate.
+ *  \param  parity          the parity of the UART.
+ *  \param  bits_per_byte   bits per byte.
+ *  \param  stop_bits       number of stop bits.
+ */
 void multi_uart_tx(server interface multi_uart_tx_if i,
                    port p, clock clk,
+                   size_t num_uarts,
                    uart_parity_t parity, unsigned bits_per_byte,
                    unsigned stop_bits);
 
+
+#include "multi_uart_impl.h"
 
 #endif // __XC__
 

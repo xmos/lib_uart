@@ -9,9 +9,12 @@
 #include <stdio.h>
 #include <print.h>
 #include <xscope.h>
+#include <gpio.h>
+#include <debug_print.h>
+#include <xclib.h>
 
-#ifdef __uart_rx_conf_h_exists__
-#include "uart_rx_conf.h"
+#ifndef UART_RX_DISABLE_DYNAMIC_CONFIG
+#define UART_RX_DISABLE_DYNAMIC_CONFIG 0
 #endif
 
 enum uart_rx_state {
@@ -68,31 +71,28 @@ void uart_rx(server interface uart_rx_if c,
              enum uart_parity_t parity,
              unsigned bits_per_byte,
              unsigned stop_bits,
-             port p_rxd0)
+             client input_gpio_if p_rxd)
 {
   unsigned char buffer[n];
   int data_bit_count;
   timer tmr;
-  int data_trigger = 1;
   enum uart_rx_state state = WAITING_FOR_HIGH;
   int t;
   unsigned bit_time = (XS1_TIMER_HZ / baud);
   int stop_bit_count;
   unsigned data;
   unsigned rdptr = 0, wrptr = 0;
-  port * movable pp_rxd0 = &p_rxd0;
-  in buffered port:1 * movable pp_rxd = reconfigure_port(move(pp_rxd0),
-                                                         in buffered port:1);
-  in buffered port:1 &p_rxd = *pp_rxd;
+  p_rxd.event_when_pins_eq(1);
+  assert(!UART_RX_DISABLE_DYNAMIC_CONFIG || isnull(config));
   while (1) {
     select {
     // The following cases implement the uart state machine
-    case (state == WAITING_FOR_INPUT || state == WAITING_FOR_HIGH) =>
-         p_rxd when pinseq(data_trigger) :> void:
+    case p_rxd.event():
       tmr :> t;
+      (void) p_rxd.input();
       switch (state) {
       case WAITING_FOR_HIGH:
-        data_trigger = 0;
+        p_rxd.event_when_pins_eq(0);
         state = WAITING_FOR_INPUT;
         break;
       case WAITING_FOR_INPUT:
@@ -107,8 +107,7 @@ void uart_rx(server interface uart_rx_if c,
       case TESTING_START_BIT:
         // We should now be half way through the start bit
         // Test it is not a glitch
-        int level_test;
-        p_rxd :> level_test;
+        int level_test = p_rxd.input();
         if (level_test == 0) {
           data_bit_count = 0;
           t += bit_time;
@@ -116,16 +115,17 @@ void uart_rx(server interface uart_rx_if c,
           state = INPUTTING_DATA_BIT;
         }
         else {
-          data_trigger = 1;
+          p_rxd.event_when_pins_eq(1);
           state = WAITING_FOR_HIGH;
         }
         break;
       case INPUTTING_DATA_BIT:
-        p_rxd :> >> data;
+        int bit = p_rxd.input();
+        data = data << 1 | bit;
         data_bit_count++;
         t += bit_time;
         if (data_bit_count == bits_per_byte) {
-          data >>= CHAR_BIT * sizeof(data) - bits_per_byte;
+          data = bitrev(data) >> (CHAR_BIT * sizeof(unsigned) - bits_per_byte);
           if (parity != UART_PARITY_NONE) {
             state = INPUTTING_PARITY_BIT;
           } else {
@@ -137,14 +137,13 @@ void uart_rx(server interface uart_rx_if c,
             }
             else {
               state = WAITING_FOR_INPUT;
-              data_trigger = 0;
+              p_rxd.event_when_pins_eq(0);
             }
           }
         }
         break;
       case INPUTTING_PARITY_BIT:
-        int bit;
-        p_rxd :> bit;
+        int bit = p_rxd.input();
         if (bit == parity32(data, parity)) {
           if (add_to_buffer(buffer, n, rdptr, wrptr, data))
             c.data_ready();
@@ -153,33 +152,33 @@ void uart_rx(server interface uart_rx_if c,
             state = INPUTTING_STOP_BIT;
           }
           else {
-            data_trigger = 0;
+            p_rxd.event_when_pins_eq(0);
             state = WAITING_FOR_INPUT;
           }
         }
         else {
-          data_trigger = 1;
+          p_rxd.event_when_pins_eq(1);
           state = WAITING_FOR_HIGH;
         }
         t += bit_time;
         break;
       case INPUTTING_STOP_BIT:
-        int level_test;
-        p_rxd :> level_test;
+        int level_test = p_rxd.input();
         if (level_test == 0) {
-          data_trigger = 1;
+          p_rxd.event_when_pins_eq(1);
           state = WAITING_FOR_HIGH;
         }
         stop_bit_count--;
         t += bit_time;
         if (stop_bit_count == 0) {
-          data_trigger = 0;
+          p_rxd.event_when_pins_eq(0);
           state = WAITING_FOR_INPUT;
         }
         break;
       }
       break;
-    case c._input_byte() -> unsigned char data:
+
+    case c.read() -> unsigned char data:
       if (rdptr == wrptr)
         break;
       data = buffer[rdptr];
@@ -192,32 +191,34 @@ void uart_rx(server interface uart_rx_if c,
     case c.has_data() -> int res:
       res = (rdptr != wrptr);
       break;
+#if !UART_RX_DISABLE_DYNAMIC_CONFIG
     // Handle client interaction with the component
     case !isnull(config) => config.set_baud_rate(unsigned baud_rate):
       bit_time = XS1_TIMER_HZ / baud_rate;
-      data_trigger = 1;
+      p_rxd.event_when_pins_eq(1);
       state = WAITING_FOR_HIGH;
       break;
     case !isnull(config) => config.set_parity(enum uart_parity_t new_parity):
       parity = new_parity;
-      data_trigger = 1;
+      p_rxd.event_when_pins_eq(1);
       state = WAITING_FOR_HIGH;
       break;
     case !isnull(config) => config.set_stop_bits(unsigned new_stop_bits):
       stop_bits = new_stop_bits;
-      data_trigger = 1;
+      p_rxd.event_when_pins_eq(1);
       state = WAITING_FOR_HIGH;
       break;
     case !isnull(config) => config.set_bits_per_byte(unsigned bpb):
       bits_per_byte = bpb;
-      data_trigger = 1;
+      p_rxd.event_when_pins_eq(1);
       state = WAITING_FOR_HIGH;
       break;
+#endif
     }
   }
 }
 
 
 extends client interface uart_rx_if : {
-  extern inline uint8_t input_byte(client uart_rx_if i);
+  extern inline uint8_t wait_for_data_and_read(client uart_rx_if i);
 }
