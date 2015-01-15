@@ -20,7 +20,7 @@ resources = xmostest.request_resource("xsim")
 class UartTester(xmostest.Tester):
 
     def __init__(self):
-        super(xmostest.Tester, self).__init__()
+        super(UartTester, self).__init__()
         self.register_test("lib_uart","sim_regression","loopback_test", {})
 
     def run(self, output):
