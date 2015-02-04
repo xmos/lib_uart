@@ -13,7 +13,7 @@ class UARTTxChecker(xmostest.SimThread):
     transations caused by the device, by looking at the tx pins.
     """
 
-    def __init__(self, rx_port, tx_port, parity, baud, length, stop_bits):
+    def __init__(self, rx_port, tx_port, parity, baud, length, stop_bits, bpb):
         self._rx_port           = rx_port
         self._tx_port           = tx_port
         self._parity            = parity
@@ -21,6 +21,7 @@ class UARTTxChecker(xmostest.SimThread):
         self._timed_transitions = []
         self._length            = length
         self._stop_bits         = stop_bits
+        self._bits_per_byte     = bpb
         # Hex value of stop bits, as MSB 1st char, e.g. 0b11 : 0xC0
 
 
@@ -72,7 +73,7 @@ class UARTTxChecker(xmostest.SimThread):
         
         # recv the byte
         crc_sum = 0
-        for j in range(8):
+        for j in range(self._bits_per_byte):
             val = self.get_val_timeout(xsi, self._tx_port)
             # print val
             byte += (val << (j))
