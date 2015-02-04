@@ -46,10 +46,7 @@ int main() {
     on tile[0] : uart_tx(i_tx, i_tx_config, BAUD, PARITY, 8, 1, i_gpio_tx[0]);
     on tile[0] : {
         uart_test(i_tx, i_tx_config, BAUD);
-        _Exit(0);
      }
-    par (int i=0;i<6;i++)
-    on tile[0]: while(1);
    }
    return 0;
  }

@@ -153,9 +153,10 @@ class UARTTxChecker(xmostest.SimThread):
         :param xsi:        XMOS Simulator Instance.
         """
         stop_bits_correct = True
-        for i in range(self._stop_bits - 1):
+        for i in range(self._stop_bits):
             # The stop bits should stay high for this time
-            if self.get_val_timeout(xsi, self._tx_port) == 0:
+            self.wait_baud_time(xsi)
+            if self.get_port_val(xsi, self._tx_port) == 0:
                 stop_bits_correct = False
         print "tx ends high: %s" % ("True" if stop_bits_correct else "False")
 
