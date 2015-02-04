@@ -14,6 +14,17 @@ class UARTTxChecker(xmostest.SimThread):
     """
 
     def __init__(self, rx_port, tx_port, parity, baud, length, stop_bits, bpb):
+        """
+        Create a UARTTxChecker instance.
+
+        :param rx_port:    Receive port of the UART device under test.
+        :param tx_port:    Transmit port of the UART device under test.
+        :param parity:     Parity of the UART connection.
+        :param baud:       BAUD rate of the UART connection.
+        :param length:     Length of transmission to check.
+        :param stop_bits:  Number of stop_bits for each UART byte.
+        :param bpb:        Number of data bits per "byte" of UART data.
+        """
         self._rx_port           = rx_port
         self._tx_port           = tx_port
         self._parity            = parity
@@ -26,7 +37,13 @@ class UARTTxChecker(xmostest.SimThread):
 
 
     def get_port_val(self, xsi, port):
-        "Sample port, modelling the pull up"
+        """
+        Sample the state of a port
+
+        :param xsi:        XMOS Simulator Instance.
+        :param port:       Port to sample.
+        """
+
         is_driving = xsi.is_port_driving(port)
         if not is_driving:
             return 1
@@ -34,19 +51,36 @@ class UARTTxChecker(xmostest.SimThread):
             return xsi.sample_port_pins(port);
 
     def get_bit_time(self):
-        "Time per bit is 1/baud"
+        """
+        Returns the expected time between bits for the currently set BAUD rate.
+
+        Returns float value in nanoseconds.
+        """
         # Return float value in ns
         return (1.0/self._baud) * 1e9
 
     def wait_baud_time(self, xsi):
+        """
+        Wait for 1 bit time, as determined by the baud rate.
+        """
         self.wait_until(xsi.get_time() + self.get_bit_time())
         return True
 
     def wait_half_baud_time(self, xsi):
+        """
+        Wait for half a bit time, as determined by the baud rate.
+        """
         self.wait_until(xsi.get_time() + (self.get_bit_time() / 2))
 
 
     def read_packet(self, xsi, parity, length = 4):
+        """
+        Read a given number of bytes of UART traffic sent by the device.
+
+        :param xsi:        XMOS Simulator Instance.
+        :param parity:     The UART partiy setting. See Parity.
+        :param length:     The number of bytes to read. Defaults to 4.
+        """
         packet = []
         start_time = 0
         got_start_bit = False
@@ -55,6 +89,12 @@ class UARTTxChecker(xmostest.SimThread):
         return packet
 
     def read_byte(self, xsi, parity):
+        """
+        Read 1 byte of UART traffic sent by the device
+
+        :param xsi:        XMOS Simulator Instance.
+        :param parity:     The UART partiy setting. See Parity.
+        """
         byte = 0
         val = 0
 
@@ -68,7 +108,7 @@ class UARTTxChecker(xmostest.SimThread):
         else:
             return False
 
-        # This should be the 1st byte?!?
+        # This should be the 1st data bit?!?
         self.get_val_timeout(xsi, self._tx_port)
         
         # recv the byte
@@ -91,6 +131,13 @@ class UARTTxChecker(xmostest.SimThread):
         return byte
 
     def check_parity(self, xsi, crc_sum, parity):
+        """
+        Read the parity bit and check it against a crc sum. Print correctness.
+
+        :param xsi:        XMOS Simulator Instance.
+        :param crc_sum:    The checksum to test parity against.
+        :param parity:     The UART partiy setting. See Parity.
+        """
         if parity < 2:
             if self.get_val_timeout(xsi, self._tx_port) == (crc_sum + parity) % 2:
                 print "Parity bit correct"
@@ -100,6 +147,11 @@ class UARTTxChecker(xmostest.SimThread):
             print "Parity bit correct"
     
     def check_stopbit(self, xsi):
+        """
+        Read the stop bit(s) of a UART transmission and print correctness.
+        
+        :param xsi:        XMOS Simulator Instance.
+        """
         stop_bits_correct = True
         for i in range(self._stop_bits - 1):
             # The stop bits should stay high for this time
@@ -108,21 +160,35 @@ class UARTTxChecker(xmostest.SimThread):
         print "tx ends high: %s" % ("True" if stop_bits_correct else "False")
 
     def get_val_timeout(self, xsi, port):
+        """
+        Get a value from a given port of the device, with a timeout determined 
+        by the BAUD rate.
+
+        :param xsi:        XMOS Simulator Instance.
+        :param port:       The port to sample.
+        """
         timeout = self.get_bit_time() * 0.99
         short_timeout = self.get_bit_time() * 0.005
 
-        # Allow for rise time
+        # Allow for "rise" time
         self.wait_until(xsi.get_time() + short_timeout)
 
         # Get val
         K = self.wait_time_or_pin_change(xsi, timeout, port)
 
-
-        # Allow for rise time
+        # Allow for "fall" time
         self.wait_until(xsi.get_time() + short_timeout)
         return K
 
     def wait_time_or_pin_change(self, xsi, timeout, port):
+        """
+        Waits for a given timeout, or until a port changes state. Which ever 
+        occurs 1st. Prints an error if the former causes the function to break.
+
+        :param xsi:        XMOS Simulator Instance.
+        :param timeout:    Time to wait.
+        :param port:       Port to sample.
+        """
         start_time = xsi.get_time()
         start_val  = self.get_port_val(xsi, port)
         transitioned_during_wait = False
