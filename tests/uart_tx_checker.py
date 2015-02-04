@@ -99,9 +99,13 @@ class UARTTxChecker(xmostest.SimThread):
         else:
             print "Parity bit correct"
     
-    # TODO: Look at self._stop_bits
     def check_stopbit(self, xsi):
-        print "tx ends high: %s" % ("True" if (self.get_port_val(xsi, self._tx_port)) else "False")
+        stop_bits_correct = True
+        for i in range(self._stop_bits - 1):
+            # The stop bits should stay high for this time
+            if self.get_val_timeout(xsi, self._tx_port) == 0:
+                stop_bits_correct = False
+        print "tx ends high: %s" % ("True" if stop_bits_correct else "False")
 
     def get_val_timeout(self, xsi, port):
         timeout = self.get_bit_time() * 0.99
