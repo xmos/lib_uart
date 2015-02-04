@@ -12,3 +12,6 @@
 **/pdf/*
 **/html/*
 **/.settings/*
+*.pyc
+test_results.csv
+xscope_out.xmt
