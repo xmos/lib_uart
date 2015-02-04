@@ -294,7 +294,7 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i_data,
  *                       100 Mhz reference clock then this value
  *                       should be at least 10.
  */
-void uart_tx_streaming(in port p, streaming chanend c, int ticks_per_bit);
+void uart_tx_streaming(out port p, streaming chanend c, int ticks_per_bit);
 
 /** Write a byte to a streaming UART transmitter.
  *

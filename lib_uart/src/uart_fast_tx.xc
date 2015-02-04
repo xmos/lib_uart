@@ -16,7 +16,7 @@ void uart_tx_streaming_write_byte(streaming chanend c, uint8_t byte)
   c <: byte;
 }
 
-void uart_tx_streaming(streaming chanend c, out port p, int clocks) {
+void uart_tx_streaming(out port p, streaming chanend c, int clocks) {
     int t;
     unsigned char b;
     while (1) {

@@ -19,7 +19,7 @@ void uart_rx_streaming_read_byte(streaming chanend c, uint8_t &byte)
   c :> byte;
 }
 
-void uart_rx_streaming(streaming chanend cOut, in port pIn, int clocks) {
+void uart_rx_streaming(in port pIn, streaming chanend cOut, int clocks) {
     int dt2 = (clocks * 3)>>1; //one and a half bit times
     int dt = clocks;
     int t;
