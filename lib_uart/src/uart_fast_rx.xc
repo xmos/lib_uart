@@ -5,6 +5,7 @@
 
 #include <xs1.h>
 #include <xclib.h>
+#include <uart.h>
 
 void uart_rx_fast_init(in port p, const clock clkblk){
     //set port into clocked mode
@@ -13,7 +14,12 @@ void uart_rx_fast_init(in port p, const clock clkblk){
     clearbuf(p);
 }
 
-void uart_rx_fast(in port pIn, streaming chanend cOut, int clocks) {
+void uart_rx_streaming_read_byte(streaming chanend c, uint8_t &byte)
+{
+  c :> byte;
+}
+
+void uart_rx_streaming(streaming chanend cOut, in port pIn, int clocks) {
     int dt2 = (clocks * 3)>>1; //one and a half bit times
     int dt = clocks;
     int t;
