@@ -41,8 +41,8 @@ int main() {
   streaming chan c_rx;
   streaming chan c_tx;
   par {
-    on tile[0]: uart_tx_streaming(c_tx, p_uart_tx, TICKS_PER_BIT);
-    on tile[0]: uart_rx_streaming(c_rx, p_uart_rx, TICKS_PER_BIT);
+    on tile[0]: uart_tx_streaming(p_uart_tx, c_tx, TICKS_PER_BIT);
+    on tile[0]: uart_rx_streaming(p_uart_rx, c_rx, TICKS_PER_BIT);
     on tile[0]: app(c_tx, c_rx);
   }
   return 0;
