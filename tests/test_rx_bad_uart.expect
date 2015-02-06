@@ -1,0 +1,4 @@
+TEST CONFIG:{'baud rate':\d+}
+Performing rx test.
+0x00
+0xff
