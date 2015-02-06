@@ -11,7 +11,7 @@ def do_test(baud):
 
     checker = UARTTxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", Parity['UART_PARITY_NONE'], baud, 256, 1, 8)
     tester  = xmostest.ComparisonTester(open('test_tx_uart.expect'),
-                                        "lib_uart", "sim_regression", "fast_tx", myenv,
+                                        "lib_uart", "sim_regression", "tx_fast", myenv,
                                         regexp=True)
 
     # Only want no parity @ 230400 baud for smoke tests
@@ -29,5 +29,6 @@ def do_test(baud):
         tester = tester)
 
 def runtests():
-    for baud in [230400, 460800, 921600]:
-        do_test(baud)
+    return False
+    # for baud in [230400, 460800, 921600]:
+    #     do_test(baud)
