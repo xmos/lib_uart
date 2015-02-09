@@ -25,16 +25,14 @@ class UARTTxChecker(xmostest.SimThread):
         :param stop_bits:  Number of stop_bits for each UART byte.
         :param bpb:        Number of data bits per "byte" of UART data.
         """
-        self._rx_port           = rx_port
-        self._tx_port           = tx_port
-        self._parity            = parity
-        self._baud              = baud
-        self._timed_transitions = []
-        self._length            = length
-        self._stop_bits         = stop_bits
-        self._bits_per_byte     = bpb
+        self._rx_port = rx_port
+        self._tx_port = tx_port
+        self._parity = parity
+        self._baud = baud
+        self._length = length
+        self._stop_bits = stop_bits
+        self._bits_per_byte = bpb
         # Hex value of stop bits, as MSB 1st char, e.g. 0b11 : 0xC0
-
 
     def get_port_val(self, xsi, port):
         """
@@ -48,7 +46,7 @@ class UARTTxChecker(xmostest.SimThread):
         if not is_driving:
             return 1
         else:
-            return xsi.sample_port_pins(port);
+            return xsi.sample_port_pins(port)
 
     def get_bit_time(self):
         """
@@ -72,8 +70,7 @@ class UARTTxChecker(xmostest.SimThread):
         """
         self.wait_until(xsi.get_time() + (self.get_bit_time() / 2))
 
-
-    def read_packet(self, xsi, parity, length = 4):
+    def read_packet(self, xsi, parity, length=4):
         """
         Read a given number of bytes of UART traffic sent by the device.
 
@@ -116,7 +113,7 @@ class UARTTxChecker(xmostest.SimThread):
         for j in range(self._bits_per_byte):
             val = self.get_val_timeout(xsi, self._tx_port)
             # print val
-            byte += (val << (j))
+            byte += (val << j)
             crc_sum += val
 
         # Check the parity if needs be
@@ -191,13 +188,13 @@ class UARTTxChecker(xmostest.SimThread):
         :param port:       Port to sample.
         """
         start_time = xsi.get_time()
-        start_val  = self.get_port_val(xsi, port)
+        start_val = self.get_port_val(xsi, port)
         transitioned_during_wait = False
 
         def _continue(_timeout, _start_time, _start_val):
-            if(xsi.get_time() >= _start_time + _timeout):
+            if xsi.get_time() >= _start_time + _timeout:
                 return True
-            if(self.get_port_val(xsi, port) != _start_val):
+            if self.get_port_val(xsi, port) != _start_val:
                 transitioned_during_wait = True
                 return True
             return False
@@ -209,8 +206,6 @@ class UARTTxChecker(xmostest.SimThread):
             print "FAIL :: Unexpected Transition."
 
         return start_val
-
-
 
     def run(self):
         # Wait for the xcore to bring the uart tx port up

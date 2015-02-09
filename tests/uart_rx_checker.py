@@ -10,7 +10,8 @@ Parity = dict(
 )
 
 class UARTRxChecker(xmostest.SimThread):
-    def __init__(self, rx_port, tx_port, parity, baud, length, stop_bits, bpb, data = [0x7f, 0x00, 0x2f, 0xff], intermittent = False):
+    def __init__(self, rx_port, tx_port, parity, baud, length, stop_bits, bpb, data=[0x7f, 0x00, 0x2f, 0xff],
+                 intermittent=False):
         """
         Create a UARTRxChecker instance.
 
@@ -24,16 +25,15 @@ class UARTRxChecker(xmostest.SimThread):
         :param data:       A list of bytes to send (default: [0x7f, 0x00, 0x2f, 0xff])
         :param intermittent: Add a random delay between sent bytes.
         """
-        self._rx_port           = rx_port
-        self._tx_port           = tx_port
-        self._parity            = parity
-        self._baud              = baud
-        self._timed_transitions = []
-        self._length            = length
-        self._stop_bits         = stop_bits
-        self._bits_per_byte     = bpb
-        self._data              = data
-        self._intermittent      = intermittent
+        self._rx_port = rx_port
+        self._tx_port = tx_port
+        self._parity = parity
+        self._baud = baud
+        self._length = length
+        self._stop_bits = stop_bits
+        self._bits_per_byte = bpb
+        self._data = data
+        self._intermittent = intermittent
         # Hex value of stop bits, as MSB 1st char, e.g. 0b11 : 0xC0
 
     def send_byte(self, xsi, byte):
@@ -54,7 +54,6 @@ class UARTRxChecker(xmostest.SimThread):
 
         # Send stop bit(s)
         self.send_stop(xsi)
-
 
     def send_start(self, xsi):
         """
@@ -119,8 +118,6 @@ class UARTRxChecker(xmostest.SimThread):
         xsi.drive_port_pins(self._rx_port, 1)
         self.wait_baud_time(xsi)
 
-
-
     def get_bit_time(self):
         """
         Returns the expected time between bits for the currently set BAUD rate.
@@ -150,7 +147,7 @@ class UARTRxChecker(xmostest.SimThread):
 
         # Wait for the device to bring up it's tx port, indicating it is ready
         self.wait(
-            (lambda x:
+            (lambda _x:
                 True if self.xsi.is_port_driving(self._tx_port) else False
             )
         )
@@ -160,8 +157,8 @@ class UARTRxChecker(xmostest.SimThread):
         # be more variable, but it hurts test time substantially.
         if self._intermittent:
             for x in self._data:
-                K = randint(20000, 100000)
-                self.wait_until(xsi.get_time() + K)
+                k = randint(20000, 100000)
+                self.wait_until(xsi.get_time() + k)
                 self.send_byte(xsi, x)
         else:
             for x in self._data:
