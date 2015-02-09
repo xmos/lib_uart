@@ -1,6 +1,6 @@
-import xmostest
-from array import array
 from random import randint
+
+import xmostest
 
 Parity = dict(
     UART_PARITY_EVEN=0,
