@@ -133,7 +133,6 @@ class UARTRxChecker(xmostest.SimThread):
         Wait for 1 bit time, as determined by the baud rate.
         """
         self.wait_until(xsi.get_time() + self.get_bit_time())
-        return True
 
     def wait_half_baud_time(self, xsi):
         """

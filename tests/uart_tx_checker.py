@@ -40,6 +40,7 @@ class UARTTxChecker(xmostest.SimThread):
         """
         Sample the state of a port
 
+        :rtype:            int
         :param xsi:        XMOS Simulator Instance.
         :param port:       Port to sample.
         """
@@ -55,6 +56,7 @@ class UARTTxChecker(xmostest.SimThread):
         Returns the expected time between bits for the currently set BAUD rate.
 
         Returns float value in nanoseconds.
+        :rtype:            float
         """
         # Return float value in ns
         return (1.0/self._baud) * 1e9
@@ -76,6 +78,9 @@ class UARTTxChecker(xmostest.SimThread):
         """
         Read a given number of bytes of UART traffic sent by the device.
 
+        Returns a list of bytes sent by the device.
+
+        :rtype:            list
         :param xsi:        XMOS Simulator Instance.
         :param parity:     The UART partiy setting. See Parity.
         :param length:     The number of bytes to read. Defaults to 4.
@@ -91,6 +96,9 @@ class UARTTxChecker(xmostest.SimThread):
         """
         Read 1 byte of UART traffic sent by the device
 
+        Returns an int, representing a byte read from the uart. Should be in the range 0 <= x < 2^bits_per_byte
+
+        :rtype:            int
         :param xsi:        XMOS Simulator Instance.
         :param parity:     The UART partiy setting. See Parity.
         """
@@ -164,6 +172,9 @@ class UARTTxChecker(xmostest.SimThread):
         Get a value from a given port of the device, with a timeout determined 
         by the BAUD rate.
 
+        Returns whether the pin is high (True) or low (False)
+
+        :rtype:            bool
         :param xsi:        XMOS Simulator Instance.
         :param port:       The port to sample.
         """
@@ -185,6 +196,9 @@ class UARTTxChecker(xmostest.SimThread):
         Waits for a given timeout, or until a port changes state. Which ever 
         occurs 1st. Prints an error if the former causes the function to break.
 
+        Returns whether the pin is high (True) or low (False)
+
+        :rtype:            bool
         :param xsi:        XMOS Simulator Instance.
         :param timeout:    Time to wait.
         :param port:       Port to sample.
