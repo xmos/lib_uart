@@ -143,7 +143,6 @@ class UARTRxChecker(xmostest.SimThread):
         """
         self.wait_until(xsi.get_time() + (self.get_bit_time() / 2))
 
-
     def run(self):
         xsi = self.xsi
         # Drive the uart line high.
@@ -156,7 +155,9 @@ class UARTRxChecker(xmostest.SimThread):
             )
         )
 
-        # Data may be a list, or a function which does... uh.. stuff.
+        # If we're doing an intermittent send, add a delay between each byte
+        # sent. Delay is in ns. 20,000ns = 20ms, 100,000ns = 100ms. Delays could
+        # be more variable, but it hurts test time substantially.
         if self._intermittent:
             for x in self._data:
                 K = randint(20000, 100000)

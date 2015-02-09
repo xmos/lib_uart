@@ -1,6 +1,11 @@
 UART Library Change Log
 =======================
 
+3.0.1
+-----
+  * Update fast rx and tx to match API prototypes & fix port directions
+  * Fixed order of ports in api calls from example program
+
 3.0.0
 -----
   * Restructued version
