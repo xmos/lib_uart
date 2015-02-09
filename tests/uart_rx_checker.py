@@ -146,11 +146,7 @@ class UARTRxChecker(xmostest.SimThread):
         xsi.drive_port_pins(self._rx_port, 1)
 
         # Wait for the device to bring up it's tx port, indicating it is ready
-        self.wait(
-            (lambda _x:
-             True if self.xsi.is_port_driving(self._tx_port) else False
-            )
-        )
+        self.wait((lambda _x: self.xsi.is_port_driving(self._tx_port)))
 
         # If we're doing an intermittent send, add a delay between each byte
         # sent. Delay is in ns. 20,000ns = 20ms, 100,000ns = 100ms. Delays could

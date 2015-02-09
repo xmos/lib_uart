@@ -225,7 +225,7 @@ class UARTTxChecker(xmostest.SimThread):
 
     def run(self):
         # Wait for the xcore to bring the uart tx port up
-        self.wait((lambda x: True if self.xsi.is_port_driving(self._tx_port) else False))
+        self.wait((lambda x: self.xsi.is_port_driving(self._tx_port)))
 
         K = self.read_packet(self.xsi, self._parity, self._length)
 
