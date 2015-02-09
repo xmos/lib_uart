@@ -3,11 +3,12 @@ from array import array
 from random import randint
 
 Parity = dict(
-    UART_PARITY_EVEN = 0,
-    UART_PARITY_ODD  = 1,
-    UART_PARITY_NONE = 2,
-    UART_PARITY_BAD  = 3
+    UART_PARITY_EVEN=0,
+    UART_PARITY_ODD=1,
+    UART_PARITY_NONE=2,
+    UART_PARITY_BAD=3
 )
+
 
 class UARTRxChecker(xmostest.SimThread):
     def __init__(self, rx_port, tx_port, parity, baud, length, stop_bits, bpb, data=[0x7f, 0x00, 0x2f, 0xff],
@@ -64,7 +65,7 @@ class UARTRxChecker(xmostest.SimThread):
         xsi.drive_port_pins(self._rx_port, 0)
         self.wait_baud_time(xsi)
 
-    def send_data(self, xsi, byte): 
+    def send_data(self, xsi, byte):
         """
         Write the data bits to the rx_port 
 
@@ -74,7 +75,7 @@ class UARTRxChecker(xmostest.SimThread):
         # print "0x%02x:" % byte
         for x in range(self._bits_per_byte):
             # print "  Sending bit %d of 0x%02x (%d)" % (x, byte, (byte >> x) & 0x01)
-            xsi.drive_port_pins(self._rx_port, (byte & (0x01 << x))>=1)
+            xsi.drive_port_pins(self._rx_port, (byte & (0x01 << x)) >= 1)
             # print "  (x): %d" % ((byte & (0x01 << x))>=1)
             self.wait_baud_time(xsi)
 
@@ -89,7 +90,7 @@ class UARTRxChecker(xmostest.SimThread):
         if parity < 2:
             crc_sum = 0
             for x in range(self._bits_per_byte):
-                crc_sum += ((byte & (0x01 << x))>=1)
+                crc_sum += ((byte & (0x01 << x)) >= 1)
             crc_sum += parity
             # print "Parity for 0x%02x: %d" % (byte, crc_sum%2)
             xsi.drive_port_pins(self._rx_port, crc_sum % 2)
@@ -125,7 +126,7 @@ class UARTRxChecker(xmostest.SimThread):
         Returns float value in nanoseconds.
         """
         # Return float value in ns
-        return (1.0/self._baud) * 1e9 
+        return (1.0 / self._baud) * 1e9
 
     def wait_baud_time(self, xsi):
         """
@@ -148,7 +149,7 @@ class UARTRxChecker(xmostest.SimThread):
         # Wait for the device to bring up it's tx port, indicating it is ready
         self.wait(
             (lambda _x:
-                True if self.xsi.is_port_driving(self._tx_port) else False
+             True if self.xsi.is_port_driving(self._tx_port) else False
             )
         )
 

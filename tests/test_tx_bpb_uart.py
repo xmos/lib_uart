@@ -5,28 +5,29 @@ from uart_tx_checker import UARTTxChecker, Parity
 
 
 def do_test(baud, parity, bpb):
-    myenv = {'parity':parity, 'baud':baud, 'bits_per_byte':bpb}
+    myenv = {'parity': parity, 'baud': baud, 'bits_per_byte': bpb}
     path = "app_uart_test_bpb"
     resources = xmostest.request_resource("xsim")
 
     checker = UARTTxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", Parity[parity], baud, 4, 1, bpb)
-    tester  = xmostest.ComparisonTester(open('test_tx_bpb_uart.expect'),
-                                        "lib_uart", "sim_regression", "tx_bpb", myenv,
-                                        regexp=True)
+    tester = xmostest.ComparisonTester(open('test_tx_bpb_uart.expect'),
+                                       "lib_uart", "sim_regression", "tx_bpb", myenv,
+                                       regexp=True)
 
     # Only want no parity @ 115200 baud for smoke tests
     if baud != 115200 or parity != 'UART_PARITY_EVEN':
         tester.set_min_testlevel('nightly')
-    if tester.test_required() != True:
+    if not tester.test_required():
         return
 
-    xmostest.build(path, env = myenv, do_clean = True)
+    xmostest.build(path, env=myenv, do_clean=True)
 
     xmostest.run_on_simulator(resources['xsim'],
-        'app_uart_test_bpb/bin/smoke/app_uart_test_bpb_smoke.xe',
-        simthreads = [checker],
-        xscope_io=True,
-        tester = tester)
+                              'app_uart_test_bpb/bin/smoke/app_uart_test_bpb_smoke.xe',
+                              simthreads=[checker],
+                              xscope_io=True,
+                              tester=tester)
+
 
 def runtests():
     for baud in [115200, 230400]:

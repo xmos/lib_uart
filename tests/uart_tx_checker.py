@@ -2,10 +2,11 @@ import xmostest
 from array import array
 
 Parity = dict(
-    UART_PARITY_EVEN = 0,
-    UART_PARITY_ODD  = 1,
-    UART_PARITY_NONE = 2,
+    UART_PARITY_EVEN=0,
+    UART_PARITY_ODD=1,
+    UART_PARITY_NONE=2,
 )
+
 
 class UARTTxChecker(xmostest.SimThread):
     """
