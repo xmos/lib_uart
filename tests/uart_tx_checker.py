@@ -44,7 +44,6 @@ class UARTTxChecker(xmostest.SimThread):
         :param xsi:        XMOS Simulator Instance.
         :param port:       Port to sample.
         """
-
         is_driving = xsi.is_port_driving(port)
         if not is_driving:
             return 1
@@ -116,13 +115,12 @@ class UARTTxChecker(xmostest.SimThread):
             return False
 
         # This should be the 1st data bit?!?
-        self.get_val_timeout(xsi, self._tx_port)
+        # self.get_val_timeout(xsi, self._tx_port)
         
         # recv the byte
         crc_sum = 0
         for j in range(self._bits_per_byte):
             val = self.get_val_timeout(xsi, self._tx_port)
-            # print val
             byte += (val << j)
             crc_sum += val
 
@@ -146,10 +144,12 @@ class UARTTxChecker(xmostest.SimThread):
         :param parity:     The UART partiy setting. See Parity.
         """
         if parity < 2:
-            if self.get_val_timeout(xsi, self._tx_port) == (crc_sum + parity) % 2:
+            read = self.get_val_timeout(xsi, self._tx_port)
+            if read == (crc_sum + parity) % 2:
                 print "Parity bit correct"
             else:
-                print "Parity bit incorrect"
+                print "Parity bit incorrect. Got %d, expected %d" % (read, 
+                    (crc_sum + parity) % 2)
         else:
             print "Parity bit correct"
     
@@ -178,8 +178,8 @@ class UARTTxChecker(xmostest.SimThread):
         :param xsi:        XMOS Simulator Instance.
         :param port:       The port to sample.
         """
-        timeout = self.get_bit_time() * 0.99
-        short_timeout = self.get_bit_time() * 0.005
+        timeout = self.get_bit_time() * 0.9
+        short_timeout = self.get_bit_time() * 0.05
 
         # Allow for "rise" time
         self.wait_until(xsi.get_time() + short_timeout)
