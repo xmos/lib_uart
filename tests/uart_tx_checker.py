@@ -178,8 +178,8 @@ class UARTTxChecker(xmostest.SimThread):
         :param xsi:        XMOS Simulator Instance.
         :param port:       The port to sample.
         """
-        timeout = self.get_bit_time() * 0.9
-        short_timeout = self.get_bit_time() * 0.05
+        timeout = self.get_bit_time() * 0.5
+        short_timeout = self.get_bit_time() * 0.25
 
         # Allow for "rise" time
         self.wait_until(xsi.get_time() + short_timeout)
