@@ -19,6 +19,7 @@ static void uart_test(streaming chanend stream, unsigned baud_rate)
 
   for(int i = 0; i < 256; i++)
     uart_tx_streaming_write_byte(stream, i);
+  _Exit(0);
 }
 
 port p_rx = on tile[0] : XS1_PORT_1A;

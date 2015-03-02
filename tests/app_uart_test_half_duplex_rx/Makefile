@@ -20,8 +20,8 @@ APP_NAME =
 
 COMMON_FLAGS = -save-temps -O2 -report $(EXTRA_FLAGS) -g
 
-XCC_FLAGS_smoke = $(COMMON_FLAGS) -DSMOKE_TEST=1 -DBAUD=$(baud) -DPARITY=$(parity)
-XCC_FLAGS_full  = $(COMMON_FLAGS) -DFULL_TEST=1 -DBAUD=$(baud) -DPARITY=$(parity)
+XCC_FLAGS_smoke = $(COMMON_FLAGS) -DSMOKE_TEST=1 -DBAUD=$(baud)
+XCC_FLAGS_full  = $(COMMON_FLAGS) -DFULL_TEST=1 -DBAUD=$(baud)
 
 # The USED_MODULES variable lists other module used by the application.
 

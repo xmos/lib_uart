@@ -58,7 +58,7 @@ int main() {
   input_gpio_if i_gpio_rx;
   par {
     on tile[0].core[0] : input_gpio_1bit_with_events(i_gpio_rx, p_rx);
-    on tile[0].core[0] : uart_rx(i_rx, null, BUFFER_SIZE, BAUD, UART_PARITY_NONE, 8, 1, i_gpio_rx);
+    on tile[0].core[0] : uart_rx(i_rx, null, BUFFER_SIZE, BAUD, PARITY, 8, 1, i_gpio_rx);
     on tile[0]: uart_test(i_rx, BAUD);
   }
   return 0;

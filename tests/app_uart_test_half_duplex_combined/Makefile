@@ -18,7 +18,7 @@ APP_NAME =
 # If the variable XCC_MAP_FLAGS is set it overrides the flags passed to
 # xcc for the final link (mapping) stage.
 
-COMMON_FLAGS = -save-temps -O2 -report $(EXTRA_FLAGS) -g
+COMMON_FLAGS = -save-temps -O2 -report $(EXTRA_FLAGS)
 
 XCC_FLAGS_smoke = $(COMMON_FLAGS) -DSMOKE_TEST=1 -DBAUD=$(baud) -DPARITY=$(parity)
 XCC_FLAGS_full  = $(COMMON_FLAGS) -DFULL_TEST=1 -DBAUD=$(baud) -DPARITY=$(parity)

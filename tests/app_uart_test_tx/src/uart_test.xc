@@ -21,6 +21,7 @@ static void uart_test(client uart_tx_if i_uart_tx,
 
   for(int i = 0; i < 256; i++)
     i_uart_tx.write(i);
+  _Exit(0);
 }
 
 port p_rx = on tile[0] : XS1_PORT_1A;

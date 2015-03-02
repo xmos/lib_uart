@@ -1,6 +1,5 @@
 import xmostest
-import os
-from xmostest.xmostest_subprocess import call
+
 from uart_rx_checker import UARTRxChecker, Parity
 
 

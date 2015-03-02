@@ -1,12 +1,11 @@
 import xmostest
-import os
-from xmostest.xmostest_subprocess import call
+
 from uart_rx_checker import UARTRxChecker, Parity
 
 
 def do_test(baud):
-    myenv = {'baud': baud, 'parity': 'UART_PARITY_EVEN'}
-    path = "app_uart_test_rx"
+    myenv = {'baud': baud}
+    path = "app_uart_test_rx_bad"
     resources = xmostest.request_resource("xsim")
 
     checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", Parity['UART_PARITY_BAD'], baud, 4, 1, 8)
@@ -23,7 +22,7 @@ def do_test(baud):
     xmostest.build(path, env=myenv, do_clean=True)
 
     xmostest.run_on_simulator(resources['xsim'],
-                              'app_uart_test_rx/bin/smoke/app_uart_test_rx_smoke.xe',
+                              'app_uart_test_rx_bad/bin/smoke/app_uart_test_rx_bad_smoke.xe',
                               simthreads=[checker],
                               xscope_io=True,
                               tester=tester,

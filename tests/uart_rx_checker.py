@@ -115,7 +115,7 @@ class UARTRxChecker(xmostest.SimThread):
 
         :param xsi:        XMOS Simulator Instance.
         """
-        # Always send a parity bit of 0
+        # Always send a parity bit of 1
         xsi.drive_port_pins(self._rx_port, 0)
         self.wait_baud_time(xsi)
 
