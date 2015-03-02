@@ -3,48 +3,26 @@
 // University of Illinois/NCSA Open Source License posted in
 // LICENSE.txt and at <http://github.xcore.com/>
 
+// UART API Header
+#include "uart.h"
+#include "uart_half_duplex.h"
+
 #include <xclib.h>
 #include <xs1.h>
+
+// Debug printing
+#include <stdio.h>
+#include <print.h>
 
 // Assertions Header
 #include "xassert.h"
 
-// UART API Header
-#include "uart.h"
-
-static inline void wait_when_pins_eq(port pin, char value);
-static inline void event_when_pins_eq(port pin, char value);
-
-// TODO: Move these into header
-unsigned baud = 115200;
-unsigned stop_bits = 1;
-unsigned bits_per_byte = 8;
-enum uart_parity_t parity = UART_PARITY_NONE;
-enum uart_tx_state {
-  WAITING_FOR_DATA,
-  OUTPUTTING_DATA_BIT,
-  OUTPUTTING_PARITY_BIT,
-  OUTPUTTING_STOP_BIT,
-  TX_INACTIVE
-};
-enum uart_rx_state {
-  WAITING_FOR_INPUT,
-  WAITING_FOR_HIGH,
-  TESTING_START_BIT,
-  INPUTTING_DATA_BIT,
-  INPUTTING_PARITY_BIT,
-  INPUTTING_STOP_BIT,
-  RX_INACTIVE
-};
-
-
 
 static inline int parity32(unsigned x, uart_parity_t parity)
 {
-  // To compute even / odd parity the checksum should be initialised
-  // to 0 / 1 respectively. The values of the art_tx_parity have been
-  // chosen so the parity can be used to initialise the checksum
-  // directly.
+  // To compute even / odd parity the checksum should be initialised to 0 / 1
+  // respectively. The values of the art_tx_parity have been chosen so the
+  // parity can be used to initialise the checksum directly.
   assert(UART_PARITY_EVEN == 0);
   assert(UART_PARITY_ODD == 1);
   crc32(x, parity, 1);
@@ -66,22 +44,29 @@ static inline void init_transmit(unsigned char buffer[buf_length],
                                  unsigned &bit_count, int &t, int bit_time,
                                  unsigned &byte)
 {
+    // printstrln("init_transmit");
     timer tmr;
     if (state != WAITING_FOR_DATA || rdptr == wrptr)
-    return;
-        byte = buffer[rdptr];
+        return;
+    byte = buffer[rdptr];
 
     // Trace the outgoing data
-//    xscope_char(UART_TX_VALUE, byte);
+    // xscope_char(UART_TX_VALUE, byte);
 
     rdptr++;
     if (rdptr == buf_length)
     rdptr = 0;
     state = OUTPUTTING_DATA_BIT;
+    // printstrln("  Outputting next byte from buffer");
+
     bit_count = 0;
+
     // Output start bit
-    p <: 0;
     tmr :> t;
+    t+=bit_time;
+    tmr when timerafter(t) :> void;
+
+    p <: 0;
     t += bit_time;
 }
 
@@ -97,17 +82,31 @@ static inline int add_to_buffer(unsigned char buffer[n], unsigned n,
 
   if (new_wrptr == rdptr) {
     // buffer full
+    // printstrln("tx buffer full!");
     return 0;
   }
 
   // Output tracing information of the values entering the buffer
-//  xscope_char(UART_RX_VALUE, data);
+  // xscope_char(UART_RX_VALUE, data);
 
   buffer[wrptr] = data;
   wrptr = new_wrptr;
   return 1;
 }
 
+static inline void event_when_pins_eq(port pin, char value)
+{
+    return;
+}
+
+static inline void wait_when_pins_eq(port pin, char value)
+{
+    assert(value == 1 || value == 0);
+    char current;
+    do {
+        pin :> current;
+    } while (current != value);
+}
 
 
 void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
@@ -116,16 +115,21 @@ void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
                       server interface uart_config_if ?i_config,
                       const static unsigned tx_buf_length,
                       const static unsigned rx_buf_length,
+                      unsigned baud,
+                      uart_parity_t parity,
+                      unsigned bits_per_byte,
+                      unsigned stop_bits,
                       port p_uart)
 {
+    enum uart_tx_state tx_state  = WAITING_FOR_DATA;
+    enum uart_rx_state rx_state  = RX_INACTIVE;
+    uart_half_duplex_mode_t mode = UART_TX_MODE;
     // Initialise the server.
     unsigned char rx_buffer[rx_buf_length], tx_buffer[tx_buf_length];
     int bit_time = XS1_TIMER_HZ / baud;
 
     // State machine intitial state.
-    enum uart_tx_state tx_state  = WAITING_FOR_DATA;
-    enum uart_rx_state rx_state  = RX_INACTIVE;
-    uart_half_duplex_mode_t mode = UART_TX_MODE;
+    p_uart <: 1;    // Idle high
 
     // Locals
     char switch_mode = 0;
@@ -135,29 +139,35 @@ void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
 
     unsigned tx_rdptr = 0, tx_wrptr = 0;
     unsigned rx_rdptr = 0, rx_wrptr = 0;
-    unsigned bit_count, stop_bit_count;
+    unsigned bit_count = 0, stop_bit_count;
+
 
     // State machine
     while(1)
     {
-        switch(mode) {
+        switch(mode) 
+        {
             // tx mode
             case UART_TX_MODE:
             {
-                select {
+                // printstrln("UART_TX_MODE");
+                select 
+                {
                     // If we're not in the waiting state, go through state
                     //  machine once per bit time
-                    case (tx_state != WAITING_FOR_DATA) => tmr  when timerafter(t) :> void:
+                    case (tx_state != WAITING_FOR_DATA && tx_state != TX_INACTIVE) => tmr when timerafter(t) :> void:
                     {
                         switch(tx_state)
                         {
                             case OUTPUTTING_DATA_BIT:
                             {
-                                p_uart <: (byte >> bit_count);
-                                t += bit_time;
+                                p_uart <: (byte >> bit_count) & 0x1;
                                 bit_count++;
+                                t += bit_time;
+                                // printf("    Outputing bit %d (%d, %dns)\n", bit_count, (byte >> bit_count) & 0x1, t);
                                 if (bit_count == bits_per_byte)
                                 {
+                                    bit_count = 0;
                                     if (parity != UART_PARITY_NONE)
                                     {
                                         tx_state = OUTPUTTING_PARITY_BIT;
@@ -173,6 +183,8 @@ void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
 
                             case OUTPUTTING_PARITY_BIT:
                             {
+                                // printstrln("OUTPUTTING_PARITY_BIT");
+
                                 int val = parity32(byte, parity);
                                 p_uart <: val;
                                 t += bit_time;
@@ -183,24 +195,31 @@ void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
 
                             case OUTPUTTING_STOP_BIT:
                             {
+                                // printstrln("OUTPUTTING_STOP_BIT");
                                 p_uart <: 1;
                                 t += bit_time;
                                 stop_bit_count--;
+
                                 if (stop_bit_count == 0) {
                                     tx_state = WAITING_FOR_DATA;
 
-                                    // If a mode switch has been indicated...
-                                    if(switch_mode)
+                                    // If a mode switch has been requested...
+                                    if(switch_mode == 1)
                                     {
                                         mode = UART_RX_MODE;
                                         tx_state = TX_INACTIVE;
                                         rx_state = WAITING_FOR_INPUT;
                                         switch_mode = 0;
+                                        p_uart :> int _;
                                         break;
                                     }
-                                    init_transmit(tx_buffer, tx_buf_length,
-                                        tx_rdptr, tx_wrptr, p_uart, tx_state,
-                                        bit_count, t, bit_time, byte);
+                                    else
+                                    {
+                                        init_transmit(tx_buffer, tx_buf_length,
+                                            tx_rdptr, tx_wrptr, p_uart, tx_state,
+                                            bit_count, t, bit_time, byte);
+                                        break;
+                                    }
                                 }
                                 break;
                             }
@@ -210,9 +229,12 @@ void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
 
                     case i_tx.write(unsigned char data) -> int buffer_was_full:
                     {
+                        // printstrln("i_tx.write");
+
                         if (buffer_full(tx_rdptr, tx_wrptr, tx_buf_length))
                         {
                           buffer_was_full = 1;
+                          // printstrln("  Buffer full.");
                           return;
                         }
                         buffer_was_full = 0;
@@ -229,6 +251,8 @@ void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
 
                     case i_tx.get_available_buffer_size(void) -> size_t available:
                     {
+                        // printstrln("i_tx.get_available_buffer_size");
+
                         int size = tx_rdptr - tx_wrptr;
                         if (size <= 0)
                             size += tx_buf_length - 1;
@@ -238,12 +262,14 @@ void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
 
                     case i_control.set_mode(uart_half_duplex_mode_t n_mode):
                     {
+                        // printstrln("i_control.set_mode");
+
                         // If this is actually a mode change...
                         if(mode != n_mode)
                         {
                             // If we're not in an idle state, set a flag for the
-                            //  mode the be change after outputting the current
-                            //  byte
+                            // mode the be change after outputting the current
+                            // byte
                             if(tx_state != WAITING_FOR_DATA)
                             {
                                 switch_mode = 1;
@@ -253,6 +279,7 @@ void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
                                 mode = UART_RX_MODE;
                                 tx_state = TX_INACTIVE;
                                 rx_state = WAITING_FOR_INPUT;
+                                p_uart :> int _;
                                 switch_mode = 0;
                             }
                         }
@@ -287,13 +314,13 @@ void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
                         break;
                     }
 
-                    case (rx_state != WAITING_FOR_INPUT && rx_state != WAITING_FOR_HIGH) => tmr when timerafter(t) :> void:
+                    case (rx_state != WAITING_FOR_INPUT && rx_state != RX_INACTIVE) => tmr when timerafter(t) :> void:
                     {
                         switch (rx_state) {
                             case TESTING_START_BIT:
                             {
-                                // We should now be half way through the start bit
-                                // Test it is not a glitch
+                                // We should now be half way through the start
+                                // bit. Test it is not a glitch
                                 int level_test;
                                 p_uart :> level_test;
                                 if (level_test == 0)
@@ -362,7 +389,8 @@ void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
                                         rx_state = WAITING_FOR_INPUT;
                                     }
                                 }
-                                else {
+                                else 
+                                {
                                     event_when_pins_eq(p_uart, 1);
                                     rx_state = WAITING_FOR_HIGH;
                                 }
@@ -408,23 +436,32 @@ void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
                         res = (rx_rdptr != rx_wrptr);
                         break;
                     }
+
+                    case i_control.set_mode(uart_half_duplex_mode_t n_mode):
+                    {
+                        // If this is actually a mode change...
+                        if(mode != n_mode)
+                        {
+                            // If we're not in an idle state, set a flag for the
+                            //  mode the be change after outputting the current
+                            //  byte
+                            if(rx_state != WAITING_FOR_DATA)
+                            {
+                                switch_mode = 1;
+                            }
+                            else // Otherwise, just change mode
+                            {
+                                mode = UART_TX_MODE;
+                                rx_state = RX_INACTIVE;
+                                tx_state = WAITING_FOR_INPUT;
+                                switch_mode = 0;
+                            }
+                        }
+                        break;
+                    }
                 }
                 break;
             }
         }
     }
-}
-
-static inline void event_when_pins_eq(port pin, char value)
-{
-    // TODO: what do?
-    return;
-}
-
-static inline void wait_when_pins_eq(port pin, char value)
-{
-    char current;
-    do {
-        pin :> current;
-    } while (current != value);
 }

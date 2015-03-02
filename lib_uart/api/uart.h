@@ -335,6 +335,9 @@ typedef interface uart_control_if {
  *  \param i_config       interface for configuring the UART.
  *  \param tx_buf_length  the size of the transmit buffer (in bytes).
  *  \param rx_buf_length  the size of the receive buffer (in bytes).
+ *  \param baud           baud rate.
+ *  \param parity         the parity of the UART.
+ *  \param bits_per_byte  bits per byte.
  *  \param p_uart         the 1-bit port to send/recieve the UART signals.
  */
 void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
@@ -343,6 +346,10 @@ void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
                       server interface uart_config_if ?i_config,
                       const static unsigned tx_buf_length,
                       const static unsigned rx_buf_length,
+                      unsigned baud,
+                      uart_parity_t parity,
+                      unsigned bits_per_byte,
+                      unsigned stop_bits,
                       port p_uart);
 
 /*---------------------- Multi-UART API ---------------------------*/
