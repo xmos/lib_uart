@@ -12,6 +12,7 @@
 
 #define BITTIME(x) (100000000 / (x))
 
+
 static void uart_test(client uart_tx_if i_uart_tx,
                       client uart_config_if i_tx_config,
                       unsigned baud_rate)

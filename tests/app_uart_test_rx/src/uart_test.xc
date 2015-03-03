@@ -20,7 +20,6 @@
 #define CHECK_RUNTIME_PARAMETER_CHANGE 1
 #define CHECK_PARITY_ERRORS 1
 
-
 port p_rx = on tile[0] : XS1_PORT_1A;
 port p_tx = on tile[0] : XS1_PORT_1B;
 

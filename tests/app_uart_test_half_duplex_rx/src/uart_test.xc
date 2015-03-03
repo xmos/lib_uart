@@ -12,8 +12,9 @@
 #include "uart.h"
 
 #define BUFFER_SIZE 64
-port p_uart = on tile[0] : XS1_PORT_1A;     
+port p_uart = on tile[0] : XS1_PORT_1A;
 port sim_notif = on tile[0] : XS1_PORT_1B;
+
 static void uart_test(client uart_rx_if i_uart_rx, 
                       client uart_tx_buffered_if i_uart_tx,
                       client uart_control_if i_control,

@@ -20,6 +20,9 @@ APP_NAME =
 
 COMMON_FLAGS = -save-temps -O2 -report $(EXTRA_FLAGS)
 
+baud ?= 115200
+parity ?= UART_PARITY_NONE
+
 XCC_FLAGS_smoke = $(COMMON_FLAGS) -DSMOKE_TEST=1 -DBAUD=$(baud) -DSTOPBITS=$(stop_bits)
 XCC_FLAGS_full  = $(COMMON_FLAGS) -DFULL_TEST=1 -DBAUD=$(baud) -DSTOPBITS=$(stop_bits)
 
