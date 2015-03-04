@@ -15,8 +15,8 @@ def do_test(baud, stopbits):
                                        "lib_uart", "sim_regression", "rx_stopbits", myenv,
                                        regexp=True)
 
-    # Only want no parity @ 115200 baud for smoke tests
-    if baud != 115200:
+    # Only want 115200 baud w/ 2 stopbits for smoke tests
+    if baud != 115200 or stopbits != 2:
         tester.set_min_testlevel('nightly')
     if not tester.test_required():
         return
