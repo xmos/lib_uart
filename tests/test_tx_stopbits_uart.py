@@ -16,7 +16,7 @@ def do_test(baud, stopbits):
                                        regexp=True)
 
     # Only want no parity @ 115200 baud for smoke tests
-    if baud != 115200:
+    if baud != 115200 or stopbits != 2:
         tester.set_min_testlevel('nightly')
     if not tester.test_required():
         return
@@ -32,5 +32,5 @@ def do_test(baud, stopbits):
 
 def runtests():
     for baud in [14400, 57600, 115200, 230400]:
-        for stopbits in [0x1, 0x3]:
+        for stopbits in [1, 2, 3]:
             do_test(baud, stopbits)
