@@ -188,6 +188,7 @@ static void uart_test(client uart_tx_if i_uart_tx,
     debug_printf("TEST RESULT:parity_errors:%s\n", result ? "PASS" : "FAIL");
 
   }
+  _Exit(0);
 }
 
 port p_rx = on tile[0] : XS1_PORT_1A;
