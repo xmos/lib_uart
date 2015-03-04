@@ -14,8 +14,8 @@ def do_test(baud, parity):
                                        "lib_uart", "sim_regression", "rx_parity", myenv,
                                        regexp=True)
 
-    # Only want no parity @ 230400 baud for smoke tests
-    if baud != 115200:
+    # Only want no parity @ 115200 baud for smoke tests
+    if baud != 115200 or parity != "UART_PARITY_NONE":
         tester.set_min_testlevel('nightly')
     if not tester.test_required():
         return

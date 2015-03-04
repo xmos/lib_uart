@@ -105,17 +105,17 @@ class UARTTxChecker(xmostest.SimThread):
         val = 0
 
         # Recv start bit
-        print "tx starts high: %s" % ("True" if self.get_port_val(xsi, self._tx_port) else "False")
+        print "tx starts high: %s (%dns)" % ("True" if self.get_port_val(xsi, self._tx_port) else "False", xsi.get_time())
         self.wait_for_port_pins_change([self._tx_port])
 
         # The tx line should go low for 1 bit time
-        if self.get_val_timeout(xsi, self._tx_port) == 0: 
-            print "Start bit recv'd"
-        else:
-            return False
+        # if self.get_val_timeout(xsi, self._tx_port) == 0: 
+        #     print "Start bit recv'd"
+        # else:
+        #     return False
 
         # This should be the 1st data bit?!?
-        # self.get_val_timeout(xsi, self._tx_port)
+        self.get_val_timeout(xsi, self._tx_port)
         
         # recv the byte
         crc_sum = 0

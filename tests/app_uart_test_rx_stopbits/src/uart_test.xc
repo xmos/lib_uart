@@ -20,7 +20,6 @@
 #define CHECK_RUNTIME_PARAMETER_CHANGE 1
 #define CHECK_PARITY_ERRORS 1
 
-
 port p_rx = on tile[0] : XS1_PORT_1A;
 port p_tx = on tile[0] : XS1_PORT_1B;
 
@@ -48,15 +47,5 @@ int main() {
     on tile[0]: uart_test(i_rx, BAUD);
   }
 
-  // uart_rx_if i_rx;
-  // uart_config_if i_rx_config;
-  // input_gpio_if i_gpio_rx;
-  // par {
-
-  //   on tile[0] : uart_rx(i_rx, i_rx_config, BAUD, PARITY, 8, 1, i_gpio_rx);
-  //   on tile[0] : {
-  //       uart_test(i_rx, i_rx_config, BAUD);
-  //    }
-  //  }
-   return 0;
- }
+  return 0;
+}
