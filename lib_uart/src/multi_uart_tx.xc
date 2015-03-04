@@ -205,14 +205,14 @@ void multi_uart_tx_pins(chanend c,
     ts_inc = 1;
   }
 
-  printstrln("Init.");
+  // printstrln("Init.");
   //multi_uart_tx_port_init( tx_ports, uart_clock );
 
   /* wait until release (post config) */
   unsafe {
     c :> tx_slot_info;
   }
-  printstrln("Got slot info.");
+  // printstrln("Got slot info.");
   /* initialise data structures */
   for (int i = 0; i < MUART_TX_CHAN_COUNT; i++)
   {
@@ -302,13 +302,3 @@ void multi_uart_tx_pins(chanend c,
     }
   }
 }
-
-/* do timing for loop - 4.34uS is 230400bps, 8.68uS for 115200bps */
-#if 0
-#pragma xta command "echo --------------------------------------------------"
-#pragma xta command "analyze endpoints tx_bit_ep0 tx_bit_ep1"
-#pragma xta command "set required - 8.68 us"
-#pragma xta command "analyze function uart_tx_put_char"
-#pragma xta command "print nodeinfo - -"
-#pragma xta command "echo --------------------------------------------------"
-#endif

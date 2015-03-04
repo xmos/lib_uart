@@ -264,36 +264,3 @@ void multi_uart_rx_pins(streaming chanend c,
                    c, rx_slots, fourBitConfig, rx_slot_info, startBitConfig);
   }
 }
-
-
-// Validate timing to 115200 baud
-#if 0
-#pragma xta command "echo --------------------------------------------------"
-#pragma xta command "echo FullRxLoop"
-#pragma xta command "analyze endpoints rx_bit_ep rx_bit_ep"
-#pragma xta command "print nodeinfo - -"
-#pragma xta command "set required - 8.68 us"
-
-#pragma xta command "echo --------------------------------------------------"
-#pragma xta command "analyze function uart_rx_validate_char"
-#pragma xta command "print nodeinfo - -"
-
-
-#pragma xta command "echo --------------------------------------------------"
-#pragma xta command "echo Idle-idle_process_0-1"
-#pragma xta command "analyze endpoints idle_process_0 idle_process_1"
-#pragma xta command "print nodeinfo - -"
-//#pragma xta command "set required - 1.085 us"
-
-#pragma xta command "echo --------------------------------------------------"
-#pragma xta command "echo Data-data_process_0-data_process_1"
-#pragma xta command "analyze endpoints data_process_0 data_process_1"
-#pragma xta command "print nodeinfo - -"
-//#pragma xta command "set required - 1.085 us"
-#endif
-
-
-
-
-
-
