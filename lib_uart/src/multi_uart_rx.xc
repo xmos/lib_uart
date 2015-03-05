@@ -85,15 +85,15 @@ void multi_uart_rx_buffer(server interface multi_uart_rx_if i,
 {
   unsigned * unsafe rx_slots;
   multi_uart_rx_info_t * unsafe rx_slot_info;
-  chanend * unsafe c;
+  unsafe chanend c;
   while (1) {
     select {
     case i.init(streaming chanend c0):
       unsafe {
-        c = (chanend * unsafe)&c0;
-        *c :> rx_slots;
-        *c :> rx_slot_info;
-        *c <: 0;
+        c = c0;
+        c :> rx_slots;
+        c :> rx_slot_info;
+        c <: 0;
       }
       break;
     case i.read(size_t index, uint8_t &data) -> enum multi_uart_read_result_t res:
@@ -105,16 +105,16 @@ void multi_uart_rx_buffer(server interface multi_uart_rx_if i,
       break;
     case i.pause():
       unsafe {
-        *c <: 0;
+        c <: 0;
       }
       break;
     case i.restart():
       unsafe {
         char t;
         do {
-          *c :> t;
+          c :> t;
         } while (t != MULTI_UART_GO);
-        *c <: 0;
+        c <: 0;
       }
       break;
     case i.set_baud_rate(size_t index, unsigned baud_rate):

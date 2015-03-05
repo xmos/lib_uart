@@ -93,7 +93,7 @@ void multi_uart_tx_buffer(server interface multi_uart_tx_if i_tx,
                           unsigned stop_bits)
 {
   multi_uart_tx_info_t tx_slot_info[MUART_TX_CHAN_COUNT];
-  chanend * unsafe c;
+  unsafe chanend c;
 
   if (clock_rate_hz >= MUART_TX_MAX_BAUD) {
     assert(clock_rate_hz % baud == 0 &&
@@ -127,8 +127,8 @@ void multi_uart_tx_buffer(server interface multi_uart_tx_if i_tx,
     select {
       case i_tx.init(chanend c0):
         unsafe {
-          c = (chanend * unsafe) &c0;
-          *c <: (multi_uart_tx_info_t * unsafe) tx_slot_info;
+          c = (unsafe chanend) c0;
+          c <: (multi_uart_tx_info_t * unsafe) tx_slot_info;
         }
         break;
       case i_tx.is_slot_free(size_t index) -> int result:
@@ -145,12 +145,12 @@ void multi_uart_tx_buffer(server interface multi_uart_tx_if i_tx,
         break;
       case i_tx.pause():
         unsafe {
-          *c <: 0;
+          c <: 0;
         }
         break;
       case i_tx.restart():
         unsafe {
-          *c <: 0;
+          c <: 0;
         }
         break;
       case i_tx.set_baud_rate(size_t index, unsigned baud_rate):
