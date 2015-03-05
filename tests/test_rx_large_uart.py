@@ -19,14 +19,14 @@ def do_test(baud, parity):
     if not tester.test_required():
         return
 
-    xmostest.build(path, env=myenv, do_clean=True)
-
     xmostest.run_on_simulator(resources['xsim'],
                               'app_uart_test_rx_large/bin/smoke/app_uart_test_rx_large_smoke.xe',
                               simthreads=[checker],
                               xscope_io=True,
                               tester=tester,
-                              simargs=["--vcd-tracing", "-tile tile[0] -ports -o trace.vcd"])
+                              simargs=["--vcd-tracing", "-tile tile[0] -ports -o trace.vcd"],
+                              clean_before_build=True,
+                              build_env=myenv)
 
 
 def runtests():
