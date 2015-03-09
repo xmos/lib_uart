@@ -157,7 +157,7 @@ process_loop:
     mkmsk r11, 4                                
     crc32 r8, r11, r11 // compress bits         
 
-    ldaw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup
+    ldw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup
     ldw r11, r11[r5]
     ldw r8, r11[r8] // get fourBits             
 
@@ -185,7 +185,7 @@ idle_process:
      */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -204,7 +204,7 @@ idle_process:
     add r9, r9, r10
     
     /* lookup TC value and check for valid start */
-    ldaw r10, sp[STACK_SIZE + START_BIT_CONFIG_ARG]
+    ldw r10, sp[STACK_SIZE + START_BIT_CONFIG_ARG]
     ldw r10, r10[r5] // get address for the startBitLookup we will use
     
     ldc r11, 0xf
@@ -286,7 +286,7 @@ immediate_start_bit:
     /* this handles a start bit transition detected in the stop bit sample */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE + UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE + UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -329,7 +329,7 @@ immediate_start_bit:
 dp_calc_tick:
     
     // get struct pointer for UART channel
-    ldaw r11, sp[STACK_SIZE + UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE + UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r9, r5, r9
     add r11, r11, r9
@@ -380,7 +380,7 @@ process_loop:
     mkmsk r11, 4                                
     crc32 r8, r11, r11 // compress bits         
 
-    ldaw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup
+    ldw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup
     ldw r11, r11[r5]
     ldw r8, r11[r8] // get fourBits             
 
@@ -408,7 +408,7 @@ idle_process:
      */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -427,7 +427,7 @@ idle_process:
     add r9, r9, r10
     
     /* lookup TC value and check for valid start */
-    ldaw r10, sp[STACK_SIZE+START_BIT_CONFIG_ARG]
+    ldw r10, sp[STACK_SIZE+START_BIT_CONFIG_ARG]
     ldw r10, r10[r5] // get address for the startBitLookup we will use
     
     ldc r11, 0xf
@@ -509,7 +509,7 @@ immediate_start_bit:
     /* this handles a start bit transition detected in the stop bit sample */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -552,7 +552,7 @@ immediate_start_bit:
 dp_calc_tick:
     
     // get struct pointer for UART channel
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r9, r5, r9
     add r11, r11, r9
@@ -603,7 +603,7 @@ process_loop:
     mkmsk r11, 4                                
     crc32 r8, r11, r11 // compress bits         
 
-    ldaw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup    
+    ldw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup
     ldw r11, r11[r5]
     ldw r8, r11[r8] // get fourBits             
 
@@ -631,7 +631,7 @@ idle_process:
      */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -650,7 +650,7 @@ idle_process:
     add r9, r9, r10
     
     /* lookup TC value and check for valid start */
-    ldaw r10, sp[STACK_SIZE+START_BIT_CONFIG_ARG] 
+    ldw r10, sp[STACK_SIZE+START_BIT_CONFIG_ARG]
     ldw r10, r10[r5] // get address for the startBitLookup we will use
     
     ldc r11, 0xf
@@ -732,7 +732,7 @@ immediate_start_bit:
     /* this handles a start bit transition detected in the stop bit sample */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -775,7 +775,7 @@ immediate_start_bit:
 dp_calc_tick:
     
     // get struct pointer for UART channel
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r9, r5, r9
     add r11, r11, r9
@@ -826,7 +826,7 @@ process_loop:
     mkmsk r11, 4                                
     crc32 r8, r11, r11 // compress bits         
 
-    ldaw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup    
+    ldw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup
     ldw r11, r11[r5]
     ldw r8, r11[r8] // get fourBits             
 
@@ -854,7 +854,7 @@ idle_process:
      */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -873,7 +873,7 @@ idle_process:
     add r9, r9, r10
     
     /* lookup TC value and check for valid start */
-    ldaw r10, sp[STACK_SIZE+START_BIT_CONFIG_ARG] 
+    ldw r10, sp[STACK_SIZE+START_BIT_CONFIG_ARG]
     ldw r10, r10[r5] // get address for the startBitLookup we will use
     
     ldc r11, 0xf
@@ -955,7 +955,7 @@ immediate_start_bit:
     /* this handles a start bit transition detected in the stop bit sample */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -998,7 +998,7 @@ immediate_start_bit:
 dp_calc_tick:
     
     // get struct pointer for UART channel
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r9, r5, r9
     add r11, r11, r9
@@ -1049,7 +1049,7 @@ process_loop:
     mkmsk r11, 4                                
     crc32 r8, r11, r11 // compress bits         
 
-    ldaw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup    
+    ldw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup    
     ldw r11, r11[r5]
     ldw r8, r11[r8] // get fourBits             
 
@@ -1077,7 +1077,7 @@ idle_process:
      */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -1096,7 +1096,7 @@ idle_process:
     add r9, r9, r10
     
     /* lookup TC value and check for valid start */
-    ldaw r10, sp[STACK_SIZE+START_BIT_CONFIG_ARG] 
+    ldw r10, sp[STACK_SIZE+START_BIT_CONFIG_ARG]
     ldw r10, r10[r5] // get address for the startBitLookup we will use
     
     ldc r11, 0xf
@@ -1178,7 +1178,7 @@ immediate_start_bit:
     /* this handles a start bit transition detected in the stop bit sample */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -1221,7 +1221,7 @@ immediate_start_bit:
 dp_calc_tick:
     
     // get struct pointer for UART channel
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r9, r5, r9
     add r11, r11, r9
@@ -1272,7 +1272,7 @@ process_loop:
     mkmsk r11, 4                                
     crc32 r8, r11, r11 // compress bits         
 
-    ldaw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup    
+    ldw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup    
     ldw r11, r11[r5]
     ldw r8, r11[r8] // get fourBits             
 
@@ -1300,7 +1300,7 @@ idle_process:
      */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -1319,7 +1319,7 @@ idle_process:
     add r9, r9, r10
     
     /* lookup TC value and check for valid start */
-    ldaw r10, sp[STACK_SIZE+START_BIT_CONFIG_ARG] 
+    ldw r10, sp[STACK_SIZE+START_BIT_CONFIG_ARG]
     ldw r10, r10[r5] // get address for the startBitLookup we will use
     
     ldc r11, 0xf
@@ -1401,7 +1401,7 @@ immediate_start_bit:
     /* this handles a start bit transition detected in the stop bit sample */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -1444,7 +1444,7 @@ immediate_start_bit:
 dp_calc_tick:
     
     // get struct pointer for UART channel
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r9, r5, r9
     add r11, r11, r9
@@ -1495,7 +1495,7 @@ process_loop:
     mkmsk r11, 4                                
     crc32 r8, r11, r11 // compress bits         
 
-    ldaw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup    
+    ldw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup    
     ldw r11, r11[r5]
     ldw r8, r11[r8] // get fourBits             
 
@@ -1523,7 +1523,7 @@ idle_process:
      */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -1542,7 +1542,7 @@ idle_process:
     add r9, r9, r10
     
     /* lookup TC value and check for valid start */
-    ldaw r10, sp[STACK_SIZE+START_BIT_CONFIG_ARG] 
+    ldw r10, sp[STACK_SIZE+START_BIT_CONFIG_ARG]
     ldw r10, r10[r5] // get address for the startBitLookup we will use
     
     ldc r11, 0xf
@@ -1624,7 +1624,7 @@ immediate_start_bit:
     /* this handles a start bit transition detected in the stop bit sample */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -1667,7 +1667,7 @@ immediate_start_bit:
 dp_calc_tick:
     
     // get struct pointer for UART channel
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r9, r5, r9
     add r11, r11, r9
@@ -1718,7 +1718,7 @@ process_loop:
     mkmsk r11, 4                                
     crc32 r8, r11, r11 // compress bits         
 
-    ldaw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup    
+    ldw r11, sp[STACK_SIZE+FOURBIT_CONFIG_ARG] // do lookup    
     ldw r11, r11[r5]
     ldw r8, r11[r8] // get fourBits             
 
@@ -1746,7 +1746,7 @@ idle_process:
      */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -1765,7 +1765,7 @@ idle_process:
     add r9, r9, r10
     
     /* lookup TC value and check for valid start */
-    ldaw r10, sp[STACK_SIZE+START_BIT_CONFIG_ARG]
+    ldw r10, sp[STACK_SIZE+START_BIT_CONFIG_ARG]
     ldw r10, r10[r5] // get address for the startBitLookup we will use
     
     ldc r11, 0xf
@@ -1847,7 +1847,7 @@ immediate_start_bit:
     /* this handles a start bit transition detected in the stop bit sample */
     
     /* initial tc */
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r10, r5, r9 // get struct pointer for channel
     add r11, r11, r10
@@ -1890,7 +1890,7 @@ immediate_start_bit:
 dp_calc_tick:
     
     // get struct pointer for UART channel
-    ldaw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
+    ldw r11, sp[STACK_SIZE+UART_RX_INFO_ARG]
     ldc r9, CHAN_STRUCT_SIZE
     mul r9, r5, r9
     add r11, r11, r9
