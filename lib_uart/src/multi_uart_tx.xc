@@ -227,6 +227,8 @@ void multi_uart_tx_pins(chanend c,
   port_val = idle_val;
   /* initialise port */
   p <: port_val @ ts;
+  // Wait for 20 port ticks for the while(1) to be set up. TODO: This could be
+  // optimised and the number of ticks could be calculated from the BAUD rate.
   ts += 20;
 
   while (1)

@@ -87,11 +87,15 @@ static unsafe void initialize_slot_info(unsigned clock_rate_hz,
                                         multi_uart_rx_info_t * unsafe rx_slot_info)
 {
   for (int i = 0; i < MUART_RX_CHAN_COUNT; i++) {
-    rx_slot_info[i].clocks_per_bit = clock_rate_hz / baud;
-    rx_slot_info[i].use_sample = (clock_rate_hz / baud) >> 1;
+    rx_slot_info[i].clocks_per_bit = clock_rate_hz / 4 / baud;
+    rx_slot_info[i].use_sample = (clock_rate_hz / baud / 8);
     rx_slot_info[i].parity = parity;
     rx_slot_info[i].num_stop_bits = stop_bits;
     rx_slot_info[i].bits_per_byte = bits_per_byte;
+    rx_slot_info[i].uart_word_len = bits_per_byte + stop_bits;
+
+    if (parity != UART_PARITY_NONE)
+       rx_slot_info[i].uart_word_len += 1;
   }
 }
 
@@ -261,6 +265,7 @@ void multi_uart_rx_pins(streaming chanend c,
   startBitLookup1[0b1110] = 3;
   startBitLookup1[0b1100] = 2;
   startBitLookup1[0b1000] = 1;
+
   unsafe {
     c <: (void * unsafe) rx_slots;
     c <: (void * unsafe) rx_slot_info;
