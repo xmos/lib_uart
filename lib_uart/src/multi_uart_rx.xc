@@ -79,9 +79,30 @@ multi_uart_rx_validate_word(size_t index,
     return UART_RX_VALID_DATA;
 }
 
+static unsafe void initialize_slot_info(unsigned clock_rate_hz,
+                                        unsigned baud,
+                                        enum uart_parity_t parity,
+                                        unsigned bits_per_byte,
+                                        unsigned stop_bits,
+                                        multi_uart_rx_info_t * unsafe rx_slot_info)
+{
+  for (int i = 0; i < MUART_RX_CHAN_COUNT; i++) {
+    rx_slot_info[i].clocks_per_bit = clock_rate_hz / baud;
+    rx_slot_info[i].use_sample = (clock_rate_hz / baud) >> 1;
+    rx_slot_info[i].parity = parity;
+    rx_slot_info[i].num_stop_bits = stop_bits;
+    rx_slot_info[i].bits_per_byte = bits_per_byte;
+  }
+}
+
+
 [[distributable]]
 void multi_uart_rx_buffer(server interface multi_uart_rx_if i,
-                          unsigned clock_rate_hz)
+                          unsigned clock_rate_hz,
+                          unsigned baud,
+                          enum uart_parity_t parity,
+                          unsigned bits_per_byte,
+                          unsigned stop_bits)
 {
   unsigned * unsafe rx_slots;
   multi_uart_rx_info_t * unsafe rx_slot_info;
@@ -93,6 +114,11 @@ void multi_uart_rx_buffer(server interface multi_uart_rx_if i,
         c = (chanend * unsafe)&c0;
         *c :> rx_slots;
         *c :> rx_slot_info;
+        initialize_slot_info(clock_rate_hz,
+                             baud, parity,
+                             bits_per_byte,
+                             stop_bits,
+                             rx_slot_info);
         *c <: 0;
       }
       break;
@@ -120,6 +146,7 @@ void multi_uart_rx_buffer(server interface multi_uart_rx_if i,
     case i.set_baud_rate(size_t index, unsigned baud_rate):
       unsafe {
         rx_slot_info[index].clocks_per_bit = clock_rate_hz / baud_rate;
+        rx_slot_info[index].use_sample = rx_slot_info[index].clocks_per_bit >> 1;
       }
       break;
     case i.set_parity(size_t index, enum uart_parity_t parity):
@@ -159,11 +186,7 @@ extern "C" {
 
 void multi_uart_rx_pins(streaming chanend c,
                         in buffered port:32 p,
-                        unsigned num_uarts,
-                        unsigned baud,
-                        enum uart_parity_t parity,
-                        unsigned bits_per_byte,
-                        unsigned stop_bits)
+                        unsigned num_uarts)
 {
   unsigned port_val;
   e_uart_rx_chan_state state[MUART_RX_CHAN_COUNT];
@@ -257,7 +280,7 @@ void multi_uart_rx_pins(streaming chanend c,
       }
     }
 
-    p :> port_val; // junk data
+    p when pinsneq(0) :> port_val; // junk data
 
     /* run ASM function - will exit on reconfiguration request over the channel */
     uart_rx_loop_8(p, state, tickcount, bit_count, uart_word,
