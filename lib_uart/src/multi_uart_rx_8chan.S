@@ -240,14 +240,14 @@ invalid_start:
     
 data_process:
     /* get potential start bit indicator */
-    shr r9, r8, 4
-    stw r9, sp[11]
+    shr r9, r8, 4 	    // shift fourBit right 4 & store in r9
+    stw r9, sp[11]      // store r9 in "potential start indicator" on stack
     
     /* get bit from fourBits - tick_count still in r10 */
-    sub r10, r10, 1
-    shr r8, r8, r10
+    sub r10, r10, 1     // decrement tick_count
+    shr r8, r8, r10 	// shift right
     ldc r9, 1
-    and r8, r8, r9 // now got the bit
+    and r8, r8, r9 		// now got the bit
     
     /* store the bit in uart_word */
     ldw r11, r4[r5]
@@ -260,9 +260,10 @@ data_process:
     sub r10, r10, r9
     stw r10, r3[r5]
     
+check_bit_count_0:
     /* if bit_count == 0 then change state and get new tick count else calculate new tick count */
     bt r10, dp_calc_tick
-    
+store_data_0:
     /* store rx'd data in memory - means we don't block */
     ldw r9, sp[STACK_SIZE+RX_CHAR_POS_ARG]
     stw r11, r9[r5] // write data into array
@@ -272,11 +273,11 @@ data_process:
     outt res[r9], r5 // using outt means we won't block for up to 8 tokens
     
     /* check flag for a start bit in this set of samples */
-    ldw r10, sp[11]    
+    ldw r10, sp[11]
     bt r10, immediate_start_bit
     
     // set state to idle - r10 is 0
-    stw r10, r1[r5] 
+    stw r10, r1[r5]
     
     /* shift port_val and advance to next channel */
     shr r6, r6, 1
