@@ -109,13 +109,10 @@ class UARTTxChecker(xmostest.SimThread):
         self.wait_for_port_pins_change([self._tx_port])
 
         # The tx line should go low for 1 bit time
-        if self.get_val_timeout(xsi, self._tx_port) == 0: 
+        if self.get_val_timeout(xsi, self._tx_port) == 0:
             print "Start bit recv'd"
         else:
             return False
-
-        # This should be the 1st data bit?!?
-        # self.get_val_timeout(xsi, self._tx_port)
         
         # recv the byte
         crc_sum = 0
@@ -148,8 +145,7 @@ class UARTTxChecker(xmostest.SimThread):
             if read == (crc_sum + parity) % 2:
                 print "Parity bit correct"
             else:
-                print "Parity bit incorrect. Got %d, expected %d" % (read, 
-                    (crc_sum + parity) % 2)
+                print "Parity bit incorrect. Got %d, expected %d" % (read, (crc_sum + parity) % 2)
         else:
             print "Parity bit correct"
     
@@ -162,8 +158,7 @@ class UARTTxChecker(xmostest.SimThread):
         stop_bits_correct = True
         for i in range(self._stop_bits):
             # The stop bits should stay high for this time
-            self.wait_baud_time(xsi)
-            if self.get_port_val(xsi, self._tx_port) == 0:
+            if self.get_val_timeout(xsi, self._tx_port) == 0:
                 stop_bits_correct = False
         print "tx ends high: %s" % ("True" if stop_bits_correct else "False")
 
@@ -178,8 +173,10 @@ class UARTTxChecker(xmostest.SimThread):
         :param xsi:        XMOS Simulator Instance.
         :param port:       The port to sample.
         """
+        # This intentionally has a 0.1% slop. It is per-byte and gives some
+        # wiggle-room if the clock doesn't divide into ns nicely.
         timeout = self.get_bit_time() * 0.5
-        short_timeout = self.get_bit_time() * 0.25
+        short_timeout = self.get_bit_time() * 0.2495
 
         # Allow for "rise" time
         self.wait_until(xsi.get_time() + short_timeout)
@@ -226,6 +223,7 @@ class UARTTxChecker(xmostest.SimThread):
     def run(self):
         # Wait for the xcore to bring the uart tx port up
         self.wait((lambda x: self.xsi.is_port_driving(self._tx_port)))
+        self.wait((lambda x: self.get_port_val(self.xsi, self._tx_port) == 1))
 
         K = self.read_packet(self.xsi, self._parity, self._length)
 

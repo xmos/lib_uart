@@ -354,8 +354,19 @@ void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
 
 /*---------------------- Multi-UART API ---------------------------*/
 
+enum multi_uart_read_result_t {
+  UART_RX_VALID_DATA,
+  UART_RX_INVALID_DATA
+};
+
 /** Multi-UART receive interface */
-typedef interface multi_uart_rx_if {
+interface multi_uart_rx_if {
+
+  /** Initialize the multi-UART RX component.
+   *
+   *  \param   c    The chanend connected to the multi-UART RX task
+   */
+  void init(streaming chanend c);
 
   /** Read a byte for the next UART with ready data.
    *
@@ -363,24 +374,73 @@ typedef interface multi_uart_rx_if {
    *  If several UARTS have data available then the data is read out in a
    *  round-robin fashion.
    *
-   *  \param  index        This reference parameter is set to the index of
-   *                       the UART providing data
+   *  \param  index        This index of the UART to read from.
    *  \param  is_valid     This reference paramster is set to non-zero if the
    *                       byte is valid. It is set to zero if there it is
    *                       not-valid (e.g. in the case of a parity error).
    *
    *  \returns             The byte of data from the UART.
    */
-  [[clears_notification]]
-  uint8_t read(size_t &index, int &is_valid);
+  enum multi_uart_read_result_t read(size_t index, uint8_t &data);
 
-  /** Data ready notification.
+  /** Pause the multi-UART RX component for reconfiguration.
    *
-   *  This notification will be signalled when there is data available in
-   *  one of the UARTs.
+   *  This call will stop the mulit-UART component so that the UARTs can be
+   *  reconfigured.
    */
-  [[notification]] slave void data_ready(void);
-} multi_uart_rx_if;
+  void pause();
+
+  /** Restart the multi-UART RX component after reconfiguration.
+   *
+   *  This call will restart the multi-UART component.
+   */
+  void restart();
+
+  /** Set the baud rate of a UART.
+   *
+   *  This call will set the baud rate of one of the UARTs.
+   *  The rate must be a divisor of the clock rate of the underlying
+   *  clock used for the component.
+   *
+   *  \param   index       The index of the UART to configure.
+   *  \param   baud_rate   The required baud rate
+   */
+  void set_baud_rate(size_t index, unsigned baud_rate);
+
+  /** Set parity of a UART.
+   *
+   *  This call will set the parity of one of the UARTs.
+   *  The rate must be a divisor of the clock rate of the underlying
+   *  clock used for the component.
+   *
+   *  \param   index       The index of the UART to configure.
+   *  \param   baud_rate   The required parity
+   */
+  void set_parity(size_t index, enum uart_parity_t parity);
+
+  /** Set the number of stop bits of a UART.
+   *
+   *  This call will set the number of stop bits of one of the UARTs.
+   *
+   *  \param   index       The index of the UART
+   *  \param   baud_rate   The number of stop bits (0,1 or 2)
+   */
+  void set_stop_bits(size_t index, unsigned stop_bits);
+
+  /** Set the number of bit per byte of a UART.
+   *
+   *  This call will set the number of stop bits of one of the UARTs.
+   *
+   *  \param   index       The index of the UART
+   *  \param   bpb         The number of bits per byte (5,6,7 or 8)
+   */
+  void set_bits_per_byte(size_t index, unsigned bpb);
+} [[sametile]];
+
+typedef interface multi_uart_rx_if multi_uart_rx_if;
+
+#pragma select handler
+inline void multi_uart_data_ready(streaming chanend c_rx, size_t &index);
 
 /** Multi-UART receiver.
  *
@@ -401,16 +461,20 @@ typedef interface multi_uart_rx_if {
  *  \param  bits_per_byte   bits per byte.
  *  \param  stop_bits       number of stop bits.
  */
-void multi_uart_rx(server interface multi_uart_rx_if i,
-                   port p, clock clk,
+void multi_uart_rx(streaming chanend c,
+                   server interface multi_uart_rx_if i,
+                   in buffered port:32 p, clock clk,
                    size_t num_uarts,
+                   unsigned clock_rate_hz,
                    unsigned baud,
                    enum uart_parity_t parity,
                    unsigned bits_per_byte,
                    unsigned stop_bits);
 
 /** Multi-UART transmit interface */
-typedef interface multi_uart_tx_if {
+interface multi_uart_tx_if {
+
+  void init(chanend c);
 
   /** Check whether transmit slot is free.
    *
@@ -420,8 +484,7 @@ typedef interface multi_uart_tx_if {
    *  \param  index     The index of the UART to check.
    *  \returns          non-zero if the slot is free (i.e. data can be sent).
    */
-  [[clears_notification]]
-  int is_tx_slot_free(size_t index);
+  int is_slot_free(size_t index);
 
   /** Write to a UART.
    *
@@ -433,17 +496,22 @@ typedef interface multi_uart_tx_if {
    *  \param  index      The index of the UART to write to.
    *  \param  data       The data to write.
    */
-  [[clears_notification]]
   void write(size_t index, uint8_t data);
 
-  /** Transmit slot available.
-   *
-   *  This notification is signalled when it is possible to
-   *  send data to one of the UARTs.
-   */
-  [[notification]] slave void tx_slot_available(void);
+  void pause();
 
-} multi_uart_tx_if;
+  void restart();
+
+  void set_baud_rate(size_t index, unsigned baud_rate);
+
+  void set_parity(size_t index, enum uart_parity_t parity);
+
+  void set_stop_bits(size_t index, unsigned stop_bits);
+
+  void set_bits_per_byte(size_t index, unsigned bpb);
+} [[sametile]];
+
+typedef interface multi_uart_tx_if multi_uart_tx_if;
 
 /** Multi-UART transmitter.
  *
@@ -455,8 +523,8 @@ typedef interface multi_uart_tx_if {
  *  \param  i               the interface for sending data to the task.
  *  \param  p               the multibit port.
  *  \param  clk             a clock block for the component to use. This needs
- *                          to be set to run of the reference clock (the default
- *                          state for clock blocks).
+ *                          to be set to run off the reference clock (the
+ *                          default state for clock blocks).
  *  \param  num_uarts       the number of uarts to run (must be less than or
  *                          equal to the width of \p)
  *  \param  baud            baud rate.
@@ -464,10 +532,14 @@ typedef interface multi_uart_tx_if {
  *  \param  bits_per_byte   bits per byte.
  *  \param  stop_bits       number of stop bits.
  */
-void multi_uart_tx(server interface multi_uart_tx_if i,
-                   port p, clock clk,
+void multi_uart_tx(chanend c,
+                   server interface multi_uart_tx_if i,
+                   out port p,
                    size_t num_uarts,
-                   uart_parity_t parity, unsigned bits_per_byte,
+                   unsigned clock_rate_hz,
+                   unsigned baud,
+                   uart_parity_t parity,
+                   unsigned bits_per_byte,
                    unsigned stop_bits);
 
 
