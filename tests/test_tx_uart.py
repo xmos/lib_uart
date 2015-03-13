@@ -9,7 +9,7 @@ def do_test(baud):
     path = "app_uart_test_tx"
     resources = xmostest.request_resource("xsim")
 
-    checker = UARTTxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", Parity['UART_PARITY_NONE'], baud, 256, 1, 8)
+    checker = UARTTxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", Parity['UART_PARITY_NONE'], baud, 128, 1, 8)
     tester = xmostest.ComparisonTester(open('test_tx_uart.expect'),
                                        "lib_uart", "sim_regression", "tx", myenv,
                                        regexp=True)
