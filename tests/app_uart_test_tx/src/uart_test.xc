@@ -17,7 +17,7 @@ static void uart_test(client uart_tx_if i_uart_tx,
   debug_printf("TEST CONFIG:{'baud rate':%d}\n",baud_rate);
   debug_printf("Performing tx test.\n");
 
-  for(int i = 0; i < 256; i++)
+  for(int i = 0; i < 128; i++)
     i_uart_tx.write(i);
   _Exit(0);
 }
