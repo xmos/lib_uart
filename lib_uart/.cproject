@@ -70,8 +70,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_logging/doc/pdf}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_xassert}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_xassert/api}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/multi_uart_test}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/multi_uart_test/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/uart_test}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/uart_test/src}&quot;"/>
 								</option>
 								<option id="com.xmos.xc.compiler.option.defined.symbols.504752345" name="com.xmos.xc.compiler.option.defined.symbols" superClass="com.xmos.xc.compiler.option.defined.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__SHRT_MAX__=32767"/>
@@ -591,8 +591,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_logging/doc/pdf}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_xassert}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_xassert/api}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/multi_uart_test}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/multi_uart_test/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/uart_test}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/uart_test/src}&quot;"/>
 								</option>
 								<inputType id="com.xmos.cdt.c.compiler.input.c.11398149" name="C" superClass="com.xmos.cdt.c.compiler.input.c"/>
 							</tool>
@@ -932,8 +932,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_logging/doc/pdf}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_xassert}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lib_xassert/api}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/multi_uart_test}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/multi_uart_test/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/uart_test}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/uart_test/src}&quot;"/>
 								</option>
 								<inputType id="com.xmos.cdt.cxx.compiler.input.cpp.6271807" name="C++" superClass="com.xmos.cdt.cxx.compiler.input.cpp"/>
 							</tool>
