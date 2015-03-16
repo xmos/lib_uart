@@ -1,7 +1,4 @@
-// Copyright (c) 2011, XMOS Ltd, All rights reserved
-// This software is freely distributable under a derivative of the
-// University of Illinois/NCSA Open Source License posted in
-// LICENSE.txt and at <http://github.xcore.com/>
+// Copyright (c) 2015, XMOS Ltd, All rights reserved
 
 #include <xs1.h>
 #include <platform.h>
@@ -32,7 +29,7 @@ static void uart_test(client uart_rx_if i_uart_rx,
     // Output on TX so the test framework knows the client is up
     p_tx <: 1;
     
-    for(int i = 0; i < 256; i++)
+    for(int i = 0; i < 128; i++)
         printf("0x%02x\n", i_uart_rx.wait_for_data_and_read());
     
     _Exit(0);

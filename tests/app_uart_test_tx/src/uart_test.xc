@@ -1,7 +1,4 @@
-// Copyright (c) 2011, XMOS Ltd, All rights reserved
-// This software is freely distributable under a derivative of the
-// University of Illinois/NCSA Open Source License posted in
-// LICENSE.txt and at <http://github.xcore.com/>
+// Copyright (c) 2015, XMOS Ltd, All rights reserved
 
 #include <xs1.h>
 #include <platform.h>
@@ -20,7 +17,7 @@ static void uart_test(client uart_tx_if i_uart_tx,
   debug_printf("TEST CONFIG:{'baud rate':%d}\n",baud_rate);
   debug_printf("Performing tx test.\n");
 
-  for(int i = 0; i < 256; i++)
+  for(int i = 0; i < 128; i++)
     i_uart_tx.write(i);
   _Exit(0);
 }
