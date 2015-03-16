@@ -12,7 +12,7 @@ Parity = dict(
 
 class UARTRxChecker(xmostest.SimThread):
     def __init__(self, rx_port, tx_port, parity, baud, length, stop_bits, bpb, data=[0x7f, 0x00, 0x2f, 0xff],
-                 intermittent=False):
+                 intermittent=False, clear_multibit=True, multibit_port="tile[0]:XS1_PORT_8B"):
         """
         Create a UARTRxChecker instance.
 
@@ -35,6 +35,8 @@ class UARTRxChecker(xmostest.SimThread):
         self._bits_per_byte = bpb
         self._data = data
         self._intermittent = intermittent
+        self._clear_multibit = clear_multibit
+        self._multibit_port = multibit_port
         # Hex value of stop bits, as MSB 1st char, e.g. 0b11 : 0xC0
 
     def send_byte(self, xsi, byte):
@@ -143,7 +145,10 @@ class UARTRxChecker(xmostest.SimThread):
     def run(self):
         xsi = self.xsi
         # Drive the uart line high.
-        xsi.drive_port_pins(self._rx_port, 1)
+        if self._clear_multibit:
+            xsi.drive_port_pins(self._rx_port, 0xff)
+        else:
+            xsi.drive_port_pins(multibit_port, 1)
 
         # Wait for the device to bring up it's tx port, indicating it is ready
         self.wait((lambda _x: self.xsi.is_port_driving(self._tx_port)))
