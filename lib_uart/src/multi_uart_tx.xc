@@ -1,3 +1,4 @@
+// Copyright (c) 2015, XMOS Ltd, All rights reserved
 #include <uart.h>
 #include <print.h>
 #include <xassert.h>
