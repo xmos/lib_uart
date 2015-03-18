@@ -88,8 +88,8 @@ static unsafe void initialize_slot_info(unsigned clock_rate_hz,
                                         multi_uart_rx_info_t * unsafe rx_slot_info)
 {
   for (int i = 0; i < MUART_RX_CHAN_COUNT; i++) {
-    rx_slot_info[i].clocks_per_bit = clock_rate_hz / 4 / baud;
-    rx_slot_info[i].use_sample = (clock_rate_hz / baud / 8);
+    rx_slot_info[i].clocks_per_bit = clock_rate_hz / baud;
+    rx_slot_info[i].use_sample = rx_slot_info[i].clocks_per_bit / 2;
     rx_slot_info[i].parity = parity;
     rx_slot_info[i].num_stop_bits = stop_bits;
     rx_slot_info[i].bits_per_byte = bits_per_byte;
@@ -141,10 +141,6 @@ void multi_uart_rx_buffer(server interface multi_uart_rx_if i,
       break;
     case i.restart():
       unsafe {
-        char t;
-        do {
-          c :> t;
-        } while (t != MULTI_UART_GO);
         c <: 0;
       }
       break;
@@ -204,8 +200,8 @@ void multi_uart_rx_pins(streaming chanend c,
   unsigned fourBitLookup1[16];
   unsigned fourBitConfig[MUART_RX_CHAN_COUNT];
 
-  unsigned startBitLookup0[16];
-  unsigned startBitLookup1[16];
+  unsigned startBitLookupEnabled[16];
+  unsigned startBitLookupDisabled[16];
   unsigned startBitConfig[MUART_RX_CHAN_COUNT];
 
   multi_uart_rx_info_t rx_slot_info[MUART_RX_CHAN_COUNT];
@@ -253,19 +249,14 @@ void multi_uart_rx_pins(streaming chanend c,
 
   for (int i = 0; i < 16; i++)
   {
-    startBitLookup0[i] = 0xffffffff;
-    startBitLookup1[i] = 0xffffffff;
+    startBitLookupEnabled[i] = 0xffffffff;
+    startBitLookupDisabled[i] = 0xffffffff;
   }
 
-  startBitLookup0[0b0000] = 4;
-  startBitLookup0[0b0001] = 3;
-  startBitLookup0[0b0011] = 2;
-  startBitLookup0[0b0111] = 1;
-
-  startBitLookup1[0b1111] = 4;
-  startBitLookup1[0b1110] = 3;
-  startBitLookup1[0b1100] = 2;
-  startBitLookup1[0b1000] = 1;
+  startBitLookupEnabled[0b0000] = 4;
+  startBitLookupEnabled[0b0001] = 3;
+  startBitLookupEnabled[0b0011] = 2;
+  startBitLookupEnabled[0b0111] = 1;
 
   unsafe {
     c <: (void * unsafe) rx_slots;
@@ -273,7 +264,6 @@ void multi_uart_rx_pins(streaming chanend c,
   }
   while (1) {
     c :> int;
-
     /* initialisation loop */
     for (int i = 0; i < MUART_RX_CHAN_COUNT; i++) {
       state[i] = idle;
@@ -281,12 +271,17 @@ void multi_uart_rx_pins(streaming chanend c,
       bit_count[i] = 0;
       tickcount[i] = rx_slot_info[i].use_sample;
       unsafe {
-        startBitConfig[i] = (unsigned) (unsigned * unsafe) startBitLookup0;
+        if (i < num_uarts) {
+          startBitConfig[i] =
+            (unsigned) (unsigned * unsafe) startBitLookupEnabled;
+        } else {
+          startBitConfig[i] =
+            (unsigned) (unsigned * unsafe) startBitLookupDisabled;
+        }
+
         fourBitConfig[i]  = (unsigned) (unsigned * unsafe) fourBitLookup0;
       }
     }
-
-    p when pinsneq(0) :> port_val; // junk data
 
     /* run ASM function - will exit on reconfiguration request over the channel */
     uart_rx_loop_8(p, state, tickcount, bit_count, uart_word,

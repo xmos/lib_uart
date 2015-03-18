@@ -15,7 +15,6 @@ clock clk_uart = XS1_CLKBLK_4;
 
 void test(streaming chanend c_rx, client multi_uart_rx_if i_rx)
 {
-  debug_printf("TEST CONFIG:{'baud rate':%d}\n", BAUD);
   debug_printf("Performing multi_uart rx test.\n");
 
   i_rx.init(c_rx);
@@ -25,7 +24,10 @@ void test(streaming chanend c_rx, client multi_uart_rx_if i_rx)
   size_t slot;
   uint8_t data;
 
-  for(int i = 0; i < 4;)
+  i_rx.pause();
+  i_rx.set_baud_rate(2, BAUD/2);
+  i_rx.restart();
+  for(int i = 0; i < 8;)
   {
     select {
       case multi_uart_data_ready(c_rx, slot):
@@ -36,7 +38,7 @@ void test(streaming chanend c_rx, client multi_uart_rx_if i_rx)
         }
         else
         {
-          // debug_printf("Failed to read from slot %d\n", slot);
+           debug_printf("Failed to read from slot %d\n", slot);
         }
         break;
     }
@@ -57,7 +59,7 @@ int main(void)
   start_clock(clk_uart);
 
   par {
-    multi_uart_rx(c_rx, i_rx, p_uart_rx, 8, 1843200, BAUD, UART_PARITY_NONE, 8, 1);
+    multi_uart_rx(c_rx, i_rx, p_uart_rx, 3, 1843200, BAUD, UART_PARITY_NONE, 8, 1);
     test(c_rx, i_rx);
   }
   return 0;
