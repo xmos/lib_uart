@@ -97,18 +97,12 @@ void multi_uart_tx_buffer(server interface multi_uart_tx_if i_tx,
   unsafe chanend c;
 
   if (clock_rate_hz >= MUART_TX_MAX_BAUD) {
-    assert(clock_rate_hz % baud == 0 &&
-           msg("High clock rates must be a multiple of 115200"));
-
     // Update to the effective tick rate of the transmitter
     clock_rate_hz = MUART_TX_MAX_BAUD;
   }
 
   /* MUART_TX_BUF_SIZE must be a power of 2 */
   assert((MUART_TX_BUF_SIZE >> clz(bitrev(MUART_TX_BUF_SIZE))) == 1);
-
-  assert(clock_rate_hz % baud == 0 &&
-         msg("Initial baud rate must divide underlying clock rate."));
 
   unsigned initial_clocks_per_bit = clock_rate_hz / baud;
 
@@ -196,9 +190,6 @@ void multi_uart_tx_pins(chanend c,
   unsigned ts_inc = 1;
 
   if (clock_rate_hz >= MUART_TX_MAX_BAUD) {
-    assert(clock_rate_hz % MUART_TX_MAX_BAUD == 0 &&
-           msg("High clock rates must be a multiple of 115200"));
-
     // Update to the effective tick rate of the transmitter
     ts_inc = clock_rate_hz / MUART_TX_MAX_BAUD;
   }
@@ -206,14 +197,12 @@ void multi_uart_tx_pins(chanend c,
     ts_inc = 1;
   }
 
-  // printstrln("Init.");
-  //multi_uart_tx_port_init( tx_ports, uart_clock );
 
   /* wait until release (post config) */
   unsafe {
     c :> tx_slot_info;
   }
-  // printstrln("Got slot info.");
+
   /* initialise data structures */
   for (int i = 0; i < MUART_TX_CHAN_COUNT; i++)
   {
@@ -230,16 +219,14 @@ void multi_uart_tx_pins(chanend c,
   p <: port_val @ ts;
   // Wait for 20 port ticks for the while(1) to be set up. TODO: This could be
   // optimised and the number of ticks could be calculated from the BAUD rate.
-  ts += 20;
+  ts += 20 + ts_inc;
 
   while (1)
   {
     /* process the next bit on the ports */
 #pragma xta endpoint "tx_bit_ep0"
-    p <: port_val @ ts;
-    //printintln(port_val);
+    p @ ts <: port_val;
     ts += ts_inc;
-
     /* calculate next port_val */
 #pragma loop unroll
     for (int i = 0; i < MUART_TX_CHAN_COUNT; i++)

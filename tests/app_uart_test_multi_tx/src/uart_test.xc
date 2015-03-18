@@ -36,13 +36,17 @@ int main(void)
   chan c_tx;
   interface multi_uart_tx_if i_tx;
 
+#if INTERNAL_CLOCK
+  #define CLK_RATE XS1_TIMER_HZ
+#else
   configure_clock_src(clk_uart, p_uart_clk);
   configure_out_port(p_uart_tx, clk_uart, 0);
 
   start_clock(clk_uart);
-
+  #define CLK_RATE  230400
+#endif
   par {
-    multi_uart_tx(c_tx, i_tx, p_uart_tx, 8, 230400, BAUD, UART_PARITY_NONE, 8, 1);
+    multi_uart_tx(c_tx, i_tx, p_uart_tx, 8, CLK_RATE, BAUD, UART_PARITY_NONE, 8, 1);
     test(c_tx, i_tx);
   }
   return 0;

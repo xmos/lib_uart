@@ -3,8 +3,8 @@ from uart_tx_checker import UARTTxChecker, Parity as TxParity
 from uart_clock_device  import UARTClockDevice
 
 
-def do_test(baud):
-    myenv = {'baud': baud}
+def do_test(baud, internal_clock):
+    myenv = {'baud': baud, 'internal_clock': internal_clock}
     path = "app_uart_test_multi_tx"
     resources = xmostest.request_resource("xsim")
 
@@ -31,4 +31,5 @@ def do_test(baud):
 
 def runtests():
     for baud in [57600, 115200]:
-        do_test(baud)
+        for internal_clock in [0, 1]:
+            do_test(baud, internal_clock)
