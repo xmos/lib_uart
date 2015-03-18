@@ -16,8 +16,6 @@ def do_test(baud):
 
     # This test is long, only run on nightly
     tester.set_min_testlevel('nightly')
-    if not tester.test_required():
-        return
 
     xmostest.run_on_simulator(resources['xsim'],
                               'app_uart_test_tx/bin/smoke/app_uart_test_tx_smoke.xe',

@@ -17,8 +17,6 @@ def do_test(baud):
     # Only want no parity @ 230400 baud for smoke tests
     if baud != 230400:
         tester.set_min_testlevel('nightly')
-    if not tester.test_required():
-        return
 
     xmostest.run_on_simulator(resources['xsim'],
                               'app_uart_test_fast_tx/bin/smoke/app_uart_test_fast_tx_smoke.xe',

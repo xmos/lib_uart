@@ -18,8 +18,6 @@ def do_test(baud, stopbits):
     # Only want no parity @ 115200 baud for smoke tests
     if baud != 115200 or stopbits != 2:
         tester.set_min_testlevel('nightly')
-    if not tester.test_required():
-        return
 
     xmostest.run_on_simulator(resources['xsim'],
                               'app_uart_test_stopbits/bin/smoke/app_uart_test_stopbits_smoke.xe',

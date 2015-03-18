@@ -16,8 +16,6 @@ def do_test(baud, parity):
 
     # This test takes some time, nightly only
     tester.set_min_testlevel('nightly')
-    if not tester.test_required():
-        return
 
     xmostest.run_on_simulator(resources['xsim'],
                               'app_uart_test_rx_large/bin/smoke/app_uart_test_rx_large_smoke.xe',
