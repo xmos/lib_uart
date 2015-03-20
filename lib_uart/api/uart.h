@@ -354,10 +354,10 @@ void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
 
 /*---------------------- Multi-UART API ---------------------------*/
 
-enum multi_uart_read_result_t {
-  UART_RX_VALID_DATA,
-  UART_RX_INVALID_DATA
-};
+typedef enum multi_uart_read_result_t {
+  UART_RX_VALID_DATA,   ///< Data received is valid.
+  UART_RX_INVALID_DATA  ///< Data received is not valid.
+} multi_uart_read_result_t;
 
 /** Multi-UART receive interface */
 interface multi_uart_rx_if {
@@ -474,6 +474,10 @@ void multi_uart_rx(streaming chanend c,
 /** Multi-UART transmit interface */
 interface multi_uart_tx_if {
 
+  /** Initialize the multi-UART TX component.
+   *
+   *  \param   c    The chanend connected to the multi-UART TX task
+   */
   void init(chanend c);
 
   /** Check whether transmit slot is free.
@@ -498,16 +502,57 @@ interface multi_uart_tx_if {
    */
   void write(size_t index, uint8_t data);
 
+  /** Pause the multi-UART RX component for reconfiguration.
+   *
+   *  This call will stop the mulit-UART component so that the UARTs can be
+   *  reconfigured.
+   */
   void pause();
 
+  /** Restart the multi-UART RX component after reconfiguration.
+   *
+   *  This call will restart the multi-UART component.
+   */
   void restart();
 
+  /** Set the baud rate of a UART.
+   *
+   *  This call will set the baud rate of one of the UARTs.
+   *  The rate must be a divisor of the clock rate of the underlying
+   *  clock used for the component.
+   *
+   *  \param   index       The index of the UART to configure.
+   *  \param   baud_rate   The required baud rate
+   */
   void set_baud_rate(size_t index, unsigned baud_rate);
 
+  /** Set parity of a UART.
+   *
+   *  This call will set the parity of one of the UARTs.
+   *  The rate must be a divisor of the clock rate of the underlying
+   *  clock used for the component.
+   *
+   *  \param   index       The index of the UART to configure.
+   *  \param   baud_rate   The required parity
+   */
   void set_parity(size_t index, enum uart_parity_t parity);
 
+  /** Set the number of stop bits of a UART.
+   *
+   *  This call will set the number of stop bits of one of the UARTs.
+   *
+   *  \param   index       The index of the UART
+   *  \param   baud_rate   The number of stop bits (0,1 or 2)
+   */
   void set_stop_bits(size_t index, unsigned stop_bits);
 
+  /** Set the number of bit per byte of a UART.
+   *
+   *  This call will set the number of stop bits of one of the UARTs.
+   *
+   *  \param   index       The index of the UART
+   *  \param   bpb         The number of bits per byte (5,6,7 or 8)
+   */
   void set_bits_per_byte(size_t index, unsigned bpb);
 } [[sametile]];
 
