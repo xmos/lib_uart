@@ -566,3 +566,15 @@ Multi-UART transmit interface
 .............................
 
 .. doxygeninterface:: multi_uart_tx_if
+
+|newpage|
+
+|appendix|
+
+Known Issues
+------------
+
+No known issues.
+
+.. include:: ../../../CHANGELOG.rst
+
