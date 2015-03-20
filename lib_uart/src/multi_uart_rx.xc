@@ -80,6 +80,13 @@ multi_uart_rx_validate_word(size_t index,
     return UART_RX_VALID_DATA;
 }
 
+static void calc_word_len(multi_uart_rx_info_t &info)
+{
+  info.uart_word_len = info.bits_per_byte + info.num_stop_bits;
+  if (info.parity != UART_PARITY_NONE)
+       info.uart_word_len += 1;
+}
+
 static unsafe void initialize_slot_info(unsigned clock_rate_hz,
                                         unsigned baud,
                                         enum uart_parity_t parity,
@@ -93,10 +100,7 @@ static unsafe void initialize_slot_info(unsigned clock_rate_hz,
     rx_slot_info[i].parity = parity;
     rx_slot_info[i].num_stop_bits = stop_bits;
     rx_slot_info[i].bits_per_byte = bits_per_byte;
-    rx_slot_info[i].uart_word_len = bits_per_byte + stop_bits;
-
-    if (parity != UART_PARITY_NONE)
-       rx_slot_info[i].uart_word_len += 1;
+    calc_word_len(rx_slot_info[i]);
   }
 }
 
@@ -147,22 +151,25 @@ void multi_uart_rx_buffer(server interface multi_uart_rx_if i,
     case i.set_baud_rate(size_t index, unsigned baud_rate):
       unsafe {
         rx_slot_info[index].clocks_per_bit = clock_rate_hz / baud_rate;
-        rx_slot_info[index].use_sample = rx_slot_info[index].clocks_per_bit >> 1;
+        rx_slot_info[index].use_sample = rx_slot_info[index].clocks_per_bit/2;
       }
       break;
     case i.set_parity(size_t index, enum uart_parity_t parity):
       unsafe {
         rx_slot_info[index].parity = parity;
+        calc_word_len(rx_slot_info[index]);
       }
       break;
     case i.set_stop_bits(size_t index, unsigned stop_bits):
       unsafe {
        rx_slot_info[index].num_stop_bits = stop_bits;
+       calc_word_len(rx_slot_info[index]);
       }
       break;
     case i.set_bits_per_byte(size_t index, unsigned bpb):
       unsafe {
         rx_slot_info[index].bits_per_byte = bpb;
+        calc_word_len(rx_slot_info[index]);
       }
       break;
     }
@@ -189,7 +196,6 @@ void multi_uart_rx_pins(streaming chanend c,
                         in buffered port:32 p,
                         unsigned num_uarts)
 {
-  unsigned port_val;
   e_uart_rx_chan_state state[MUART_RX_CHAN_COUNT];
 
   int tickcount[MUART_RX_CHAN_COUNT];
