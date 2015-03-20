@@ -1,3 +1,4 @@
+// Copyright (c) 2015, XMOS Ltd, All rights reserved
 #ifndef __uart_half_duplex_h__
 #define __uart_half_duplex_h__
 

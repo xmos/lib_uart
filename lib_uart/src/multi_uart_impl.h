@@ -1,3 +1,4 @@
+// Copyright (c) 2015, XMOS Ltd, All rights reserved
 #ifndef __MULTI_UART_IMPL_H__
 #define __MULTI_UART_IMPL_H__
 
