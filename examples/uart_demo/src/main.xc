@@ -26,7 +26,7 @@ void app(client uart_tx_if uart_tx, client uart_rx_if uart_rx)
           byte = byte + 1;
       }
       for(size_t j = 0; j < 10; j++) {
-          printhex(uart_rx.read());
+          printhex(uart_rx.wait_for_data_and_read());
       }
   }
   printstrln(". Done.");
