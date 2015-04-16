@@ -335,6 +335,7 @@ typedef interface uart_control_if {
  *  \param baud           baud rate.
  *  \param parity         the parity of the UART.
  *  \param bits_per_byte  bits per byte.
+ *  \param stop_bits      The number of stop bits (0,1 or 2)
  *  \param p_uart         the 1-bit port to send/recieve the UART signals.
  */
 void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
@@ -372,11 +373,8 @@ interface multi_uart_rx_if {
    *  round-robin fashion.
    *
    *  \param  index        This index of the UART to read from.
-   *  \param  is_valid     This reference paramster is set to non-zero if the
-   *                       byte is valid. It is set to zero if there it is
-   *                       not-valid (e.g. in the case of a parity error).
-   *
-   *  \returns             The byte of data from the UART.
+   *  \param  data         The data byte read
+   *  \returns             An enum type that indicates if the data is valid
    */
   enum multi_uart_read_result_t read(size_t index, uint8_t &data);
 
@@ -411,7 +409,7 @@ interface multi_uart_rx_if {
    *  clock used for the component.
    *
    *  \param   index       The index of the UART to configure.
-   *  \param   baud_rate   The required parity
+   *  \param   parity      The required parity
    */
   void set_parity(size_t index, enum uart_parity_t parity);
 
@@ -420,7 +418,7 @@ interface multi_uart_rx_if {
    *  This call will set the number of stop bits of one of the UARTs.
    *
    *  \param   index       The index of the UART
-   *  \param   baud_rate   The number of stop bits (0,1 or 2)
+   *  \param   stop_bits   The number of stop bits (0,1 or 2)
    */
   void set_stop_bits(size_t index, unsigned stop_bits);
 
@@ -446,6 +444,7 @@ inline void multi_uart_data_ready(streaming chanend c_rx, size_t &index);
  *  The parity, bits per byte and number of stop bits
  *  is the same for all UARTs and cannot be changed dynamically.
  *
+ *  \param  c               a chanend
  *  \param  i               the interface for getting data from the task.
  *  \param  p               the multibit port.
  *  \param  clk             a clock block for the component to use. This needs
@@ -453,6 +452,7 @@ inline void multi_uart_data_ready(streaming chanend c_rx, size_t &index);
  *                          state for clock blocks).
  *  \param  num_uarts       the number of uarts to run (must be less than or
  *                          equal to the width of \p)
+ *  \param  clock_rate_hz   the clock rate in Hz
  *  \param  baud            baud rate.
  *  \param  parity          the parity of the UART.
  *  \param  bits_per_byte   bits per byte.
@@ -530,7 +530,7 @@ interface multi_uart_tx_if {
    *  clock used for the component.
    *
    *  \param   index       The index of the UART to configure.
-   *  \param   baud_rate   The required parity
+   *  \param   parity      The required parity
    */
   void set_parity(size_t index, enum uart_parity_t parity);
 
@@ -539,7 +539,7 @@ interface multi_uart_tx_if {
    *  This call will set the number of stop bits of one of the UARTs.
    *
    *  \param   index       The index of the UART
-   *  \param   baud_rate   The number of stop bits (0,1 or 2)
+   *  \param   stop_bits   The number of stop bits (0,1 or 2)
    */
   void set_stop_bits(size_t index, unsigned stop_bits);
 
@@ -562,13 +562,12 @@ typedef interface multi_uart_tx_if multi_uart_tx_if;
  *  The parity, bits per byte and number of stop bits
  *  is the same for all UARTs and cannot be changed dynamically.
  *
+ *  \param  c               a chanend
  *  \param  i               the interface for sending data to the task.
  *  \param  p               the multibit port.
- *  \param  clk             a clock block for the component to use. This needs
- *                          to be set to run off the reference clock (the
- *                          default state for clock blocks).
  *  \param  num_uarts       the number of uarts to run (must be less than or
  *                          equal to the width of \p)
+ *  \param  clock_rate_hz   the clock rate in Hz
  *  \param  baud            baud rate.
  *  \param  parity          the parity of the UART.
  *  \param  bits_per_byte   bits per byte.
