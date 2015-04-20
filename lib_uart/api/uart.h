@@ -444,7 +444,7 @@ inline void multi_uart_data_ready(streaming chanend c_rx, size_t &index);
  *  The parity, bits per byte and number of stop bits
  *  is the same for all UARTs and cannot be changed dynamically.
  *
- *  \param  c               a chanend
+ *  \param  c               a chanend used internally for high speed communication
  *  \param  i               the interface for getting data from the task.
  *  \param  p               the multibit port.
  *  \param  clk             a clock block for the component to use. This needs
@@ -562,7 +562,7 @@ typedef interface multi_uart_tx_if multi_uart_tx_if;
  *  The parity, bits per byte and number of stop bits
  *  is the same for all UARTs and cannot be changed dynamically.
  *
- *  \param  c               a chanend
+ *  \param  c               a chanend used internally for high speed communication
  *  \param  i               the interface for sending data to the task.
  *  \param  p               the multibit port.
  *  \param  num_uarts       the number of uarts to run (must be less than or
