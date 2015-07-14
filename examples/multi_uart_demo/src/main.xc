@@ -5,7 +5,7 @@
 #include <debug_print.h>
 
 // These ports are configures assuming the multi-UART slice is
-// connected to the SQUARE slot. For other slots the ports will
+// connected to the STAR slot. For other slots the ports will
 // need to be changed.
 in  buffered port:32 p_uart_rx = XS1_PORT_8A;
 out buffered port:8 p_uart_tx  = XS1_PORT_8B;
