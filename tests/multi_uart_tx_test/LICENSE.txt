@@ -275,5 +275,5 @@ Parties
       non-exclusive jurisdiction of the English courts.
 
 Schedule
-XMOS UART library sofware
+XMOS UART library software
 No license fee.
