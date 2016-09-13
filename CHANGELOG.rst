@@ -1,6 +1,11 @@
 UART Library Change Log
 =======================
 
+3.0.3
+-----
+
+  * Remove forward references to app notes
+
 3.0.2
 -----
 
