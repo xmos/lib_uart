@@ -97,12 +97,3 @@ Software version and dependencies
 .................................
 
 .. libdeps::
-
-Related application notes
-.........................
-
-The following application notes use this library:
-
-  * AN00158 - How to use the UART lbirary
-  * AN00159 - How to run large numbers of UARTS
-  * AN00163 - Using half duplex UARTS over RS485
