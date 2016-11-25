@@ -1,26 +1,32 @@
 UART Library Change Log
 =======================
 
+3.1.0
+-----
+
+  * RESOLVED: Correct the documentation for the write() method of
+    uart_tx_buffered_if
+
 3.0.3
 -----
 
-  * Remove forward references to app notes
+  * REMOVED: forward references to app notes
 
 3.0.2
 -----
 
-  * Update to source code license and copyright
+  * CHANGE: Update to source code license and copyright
 
 3.0.1
 -----
 
-  * Update fast rx and tx to match API prototypes & fix port directions
-  * Fixed order of ports in api calls from example program
+  * CHANGE: Update fast rx and tx to match API prototypes & fix port directions
+  * RESOLVED: Fixed order of ports in api calls from example program
 
 3.0.0
 -----
 
-  * Restructued version
+  * CHANGE: Restructued version
 
   * Changes to dependencies:
 
@@ -33,32 +39,32 @@ UART Library Change Log
 2.3.2
 -----
 
-  * Increment version for XPD release. Several minor docs bugs fixed.
+  * CHANGE: Increment version for XPD release. Several minor docs bugs fixed.
 
 2.3.1
 -----
 
-  * Tidied up uart_fast and targetted demo at L16 sliceKIT
+  * CHANGE: Tidied up uart_fast and targetted demo at L16 sliceKIT
 
 3.0.0
 -----
 
-  * Major change to generic UART tx/rx components to use new xC features with
-    different api.
+  * CHANGE: Major change to generic UART tx/rx components to use new xC features
+    with different api.
 
 2.3.0
 -----
 
-  * Added RS485 component and apps
+  * ADDED: RS485 component and apps
 
 2.2.0
 -----
 
-  * Updated documents for xSOFTip requirements
-  * Added metainfo and XPD items
+  * CHANGE: Updated documents for xSOFTip requirements
+  * ADDED: Metainfo and XPD items
 
 2.1.0
 -----
 
-  * Documentation Updates
+  * CHANGE: Documentation Updates
 

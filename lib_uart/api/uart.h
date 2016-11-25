@@ -222,8 +222,9 @@ typedef interface uart_tx_buffered_if {
    *
    *  \param data  The data to write.
    *
-   *  \returns     non-zero if the write was succesfully. If the buffer was
-   *               full then the function will return zero.
+   *  \returns     Zero if the write was successful. If the buffer was
+   *               full then the function will return 1 and the data is
+   *               discarded.
    */
   [[clears_notification]]
   int write(uint8_t data);

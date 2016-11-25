@@ -6,8 +6,8 @@ Summary
 
 A software defined, industry-standard, UART (Universal Asynchronous
 Receiver/Transmitter) library
-that allows you to control an UART serial connection via the
-xCORE GPIO hardware-response ports. This library is controlled
+that allows you to control a UART serial connection via the
+xCORE GPIO ports. This library is controlled
 via C using the XMOS multicore extensions.
 
 Features
