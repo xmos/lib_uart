@@ -6,6 +6,8 @@ UART Library Change Log
 
   * RESOLVED: Correct the documentation for the write() method of
     uart_tx_buffered_if
+  * RESOLVED: Added calls to ready_to_transmit() to the uart_tx_buffered
+    component
 
 3.0.3
 -----

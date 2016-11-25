@@ -23,7 +23,7 @@ enum uart_tx_state {
 static inline int parity32(unsigned x, uart_parity_t parity)
 {
   // To compute even / odd parity the checksum should be initialised
-  // to 0 / 1 respectively. The values of the art_tx_parity have been
+  // to 0 / 1 respectively. The values of the uart_parity_t have been
   // chosen so the parity can be used to initialise the checksum
   // directly.
   assert(UART_PARITY_EVEN == 0);
@@ -40,7 +40,8 @@ static inline int buffer_full(int rdptr, int wrptr, int buf_length)
   return (wrptr == rdptr);
 }
 
-static inline void init_transmit(unsigned char buffer[buf_length], unsigned buf_length,
+static inline void init_transmit(server interface uart_tx_buffered_if i,
+                                 unsigned char buffer[buf_length], unsigned buf_length,
                                  int &rdptr, int &wrptr,
                                  client output_gpio_if p_txd,
                                  enum uart_tx_state &state,
@@ -59,6 +60,10 @@ static inline void init_transmit(unsigned char buffer[buf_length], unsigned buf_
   rdptr++;
   if (rdptr == buf_length)
     rdptr = 0;
+
+  // Inform the client that there is space
+  i.ready_to_transmit();
+
   state = OUTPUTTING_DATA_BIT;
   bit_count = 0;
   // Output start bit
@@ -91,9 +96,13 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
 
   int t;
   p_txd.output(1);
+
+  // Inform the client that there is space
+  i.ready_to_transmit();
+
   while (1) {
     select {
-    case (state != WAITING_FOR_DATA) => tmr  when timerafter(t) :> void:
+    case (state != WAITING_FOR_DATA) => tmr when timerafter(t) :> void:
       switch (state) {
       case OUTPUTTING_DATA_BIT:
         p_txd.output((byte >> bit_count));
@@ -121,7 +130,7 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
         stop_bit_count--;
         if (stop_bit_count == 0) {
           state = WAITING_FOR_DATA;
-          init_transmit(buffer, buf_length, rdptr, wrptr, p_txd, state,
+          init_transmit(i, buffer, buf_length, rdptr, wrptr, p_txd, state,
                         bit_count, t, bit_time, byte);
         }
         break;
@@ -139,7 +148,7 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
       if (wrptr == buf_length)
         wrptr = 0;
 
-      init_transmit(buffer, buf_length, rdptr, wrptr, p_txd, state,
+      init_transmit(i, buffer, buf_length, rdptr, wrptr, p_txd, state,
                     bit_count, t, bit_time, byte);
       break;
 
@@ -154,26 +163,26 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
     case !isnull(config) => config.set_baud_rate(unsigned baud_rate):
       bit_time = XS1_TIMER_HZ / baud_rate;
       state = WAITING_FOR_DATA;
-      init_transmit(buffer, buf_length, rdptr, wrptr, p_txd, state,
+      init_transmit(i, buffer, buf_length, rdptr, wrptr, p_txd, state,
                     bit_count, t, bit_time, byte);
       break;
     case !isnull(config) => config.set_parity(uart_parity_t new_parity):
       parity = new_parity;
       state = WAITING_FOR_DATA;
-      init_transmit(buffer, buf_length, rdptr, wrptr, p_txd, state,
+      init_transmit(i, buffer, buf_length, rdptr, wrptr, p_txd, state,
                     bit_count, t, bit_time, byte);
 
       break;
     case !isnull(config) => config.set_stop_bits(unsigned new_stop_bits):
       stop_bits = new_stop_bits + 1;
       state = WAITING_FOR_DATA;
-      init_transmit(buffer, buf_length, rdptr, wrptr, p_txd, state,
+      init_transmit(i, buffer, buf_length, rdptr, wrptr, p_txd, state,
                     bit_count, t, bit_time, byte);
       break;
     case !isnull(config) => config.set_bits_per_byte(unsigned bpb):
       bits_per_byte = bpb;
       state = WAITING_FOR_DATA;
-      init_transmit(buffer, buf_length, rdptr, wrptr, p_txd, state,
+      init_transmit(i, buffer, buf_length, rdptr, wrptr, p_txd, state,
                     bit_count, t, bit_time, byte);
       break;
 #endif
