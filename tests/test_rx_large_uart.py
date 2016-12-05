@@ -9,7 +9,7 @@ def do_test(baud, parity):
     path = "app_uart_test_rx_large"
     resources = xmostest.request_resource("xsim")
 
-    checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", Parity[parity], baud, 4, 1, 8, range(128))
+    checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", Parity[parity], baud, 1, 8, range(128))
     tester = xmostest.ComparisonTester(open('test_rx_large_uart.expect'),
                                        "lib_uart", "sim_regression", "rx_large", myenv,
                                        regexp=True)

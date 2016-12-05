@@ -23,7 +23,7 @@ class UARTHalfDuplexChecker(xmostest.SimThread):
         self._bits_per_byte = bpb
 
         self._tx = TxC(rx_port, tx_port, parity, baud, length, stop_bits, bpb)
-        self._rx = RxC(rx_port, tx_port, parity, baud, length, stop_bits, bpb)
+        self._rx = RxC(rx_port, tx_port, parity, baud, stop_bits, bpb)
 
     def do_read_test(self, xsi):
         # Device reads 4 bytes from UART.
@@ -31,7 +31,7 @@ class UARTHalfDuplexChecker(xmostest.SimThread):
 
     def do_write_test(self, xsi):
         # Device sends 4 bytes down UART
-        k = self._tx.read_packet(self.xsi, self._parity, 4)
+        k = self._tx.read_packet(self.xsi, self._parity, self._length)
         print ", ".join(map((lambda x: "0x%02x" % ord(x)), k))
 
     def run(self):

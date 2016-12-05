@@ -8,6 +8,9 @@ UART Library Change Log
     uart_tx_buffered_if
   * RESOLVED: Added calls to ready_to_transmit() to the uart_tx_buffered
     component
+  * RESOLVED: Improved the uart_tx_buffered so that it can now drive at full
+    data rate without clock drift. Before it was limited to about 0.5% less than
+    the baud rate
 
 3.0.3
 -----

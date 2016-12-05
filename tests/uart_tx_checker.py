@@ -11,7 +11,7 @@ Parity = dict(
 
 class UARTTxChecker(xmostest.SimThread):
     """
-    This simulator thread will act as a UART device, and will check sent and 
+    This simulator thread will act as a UART device, and will check sent and
     transations caused by the device, by looking at the tx pins.
     """
 
@@ -113,7 +113,7 @@ class UARTTxChecker(xmostest.SimThread):
             print "Start bit recv'd"
         else:
             return False
-        
+
         # recv the byte
         crc_sum = 0
         for j in range(self._bits_per_byte):
@@ -148,11 +148,11 @@ class UARTTxChecker(xmostest.SimThread):
                 print "Parity bit incorrect. Got %d, expected %d" % (read, (crc_sum + parity) % 2)
         else:
             print "Parity bit correct"
-    
+
     def check_stopbit(self, xsi):
         """
         Read the stop bit(s) of a UART transmission and print correctness.
-        
+
         :param xsi:        XMOS Simulator Instance.
         """
         stop_bits_correct = True
@@ -164,7 +164,7 @@ class UARTTxChecker(xmostest.SimThread):
 
     def get_val_timeout(self, xsi, port):
         """
-        Get a value from a given port of the device, with a timeout determined 
+        Get a value from a given port of the device, with a timeout determined
         by the BAUD rate.
 
         Returns whether the pin is high (True) or low (False)
@@ -173,10 +173,10 @@ class UARTTxChecker(xmostest.SimThread):
         :param xsi:        XMOS Simulator Instance.
         :param port:       The port to sample.
         """
-        # This intentionally has a 0.1% slop. It is per-byte and gives some
+        # This intentionally has a 0.3% slop. It is per-byte and gives some
         # wiggle-room if the clock doesn't divide into ns nicely.
         timeout = self.get_bit_time() * 0.5
-        short_timeout = self.get_bit_time() * 0.2495
+        short_timeout = self.get_bit_time() * 0.2485
 
         # Allow for "rise" time
         self.wait_until(xsi.get_time() + short_timeout)
@@ -190,7 +190,7 @@ class UARTTxChecker(xmostest.SimThread):
 
     def wait_time_or_pin_change(self, xsi, timeout, port):
         """
-        Waits for a given timeout, or until a port changes state. Which ever 
+        Waits for a given timeout, or until a port changes state. Which ever
         occurs 1st. Prints an error if the former causes the function to break.
 
         Returns whether the pin is high (True) or low (False)

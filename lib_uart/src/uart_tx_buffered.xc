@@ -7,6 +7,7 @@
 #include <print.h>
 #include <xscope.h>
 #include "xassert.h"
+#include "debug_print.h"
 
 #ifndef UART_TX_DISABLE_DYNAMIC_CONFIG
 #define UART_TX_DISABLE_DYNAMIC_CONFIG 0
@@ -14,9 +15,11 @@
 
 enum uart_tx_state {
   WAITING_FOR_DATA,
+  OUTPUTTING_START_BIT,
   OUTPUTTING_DATA_BIT,
   OUTPUTTING_PARITY_BIT,
-  OUTPUTTING_STOP_BIT
+  OUTPUTTING_STOP_BIT,
+  STOP_BIT_SENT,
 };
 
 
@@ -40,36 +43,27 @@ static inline int buffer_full(int rdptr, int wrptr, int buf_length)
   return (wrptr == rdptr);
 }
 
-static inline void init_transmit(server interface uart_tx_buffered_if i,
-                                 unsigned char buffer[buf_length], unsigned buf_length,
-                                 int &rdptr, int &wrptr,
-                                 client output_gpio_if p_txd,
-                                 enum uart_tx_state &state,
-                                 unsigned &bit_count, int &t,
-                                 int bit_time,
-                                 unsigned &byte)
+static inline void init_transmit(int &rdptr, int &wrptr,
+                                 enum uart_tx_state &state, int &t,
+                                 int &clock_sync_required)
 {
-  timer tmr;
-  if (state != WAITING_FOR_DATA || rdptr == wrptr)
+  if ((state != WAITING_FOR_DATA && state != STOP_BIT_SENT) || rdptr == wrptr){
+    // Already busy transmitting a bit
     return;
-  byte = buffer[rdptr];
+  }
 
-  // Trace the outgoing data
-  xscope_char(UART_TX_VALUE, byte);
+  if (state == WAITING_FOR_DATA) {
+    // Starting to transmit from the idle - ensure the time is valid so that
+    // the select case will trigger
+    timer tmr;
+    tmr :> t;
 
-  rdptr++;
-  if (rdptr == buf_length)
-    rdptr = 0;
+    // Indicate to the OUTPUTTING_START_BIT state that the time needs to be
+    // re-synchronised
+    clock_sync_required = 1;
+  }
 
-  // Inform the client that there is space
-  i.ready_to_transmit();
-
-  state = OUTPUTTING_DATA_BIT;
-  bit_count = 0;
-  // Output start bit
-  p_txd.output(0);
-  tmr :> t;
-  t += bit_time;
+  state = OUTPUTTING_START_BIT;
 }
 
 [[combinable]]
@@ -89,10 +83,9 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
   timer tmr;
   int rdptr = 0, wrptr = 0;
   unsigned bit_count, stop_bit_count;
+  int clock_sync_required = 0;
 
   assert(!UART_TX_DISABLE_DYNAMIC_CONFIG || isnull(config));
-
-  stop_bits += 1;
 
   int t;
   p_txd.output(1);
@@ -104,6 +97,32 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
     select {
     case (state != WAITING_FOR_DATA) => tmr when timerafter(t) :> void:
       switch (state) {
+      case OUTPUTTING_START_BIT:
+        p_txd.output(0);
+
+        if (clock_sync_required) {
+          // Re-align clock with the start of frame
+          tmr :> t;
+          clock_sync_required = 0;
+        }
+        t += bit_time;
+        state = OUTPUTTING_DATA_BIT;
+
+        byte = buffer[rdptr];
+        rdptr++;
+        if (rdptr == buf_length) {
+          rdptr = 0;
+        }
+
+        // Trace the outgoing data
+        xscope_char(UART_TX_VALUE, byte);
+
+        bit_count = 0;
+
+        // Inform the client that there is space
+        i.ready_to_transmit();
+
+        break;
       case OUTPUTTING_DATA_BIT:
         p_txd.output((byte >> bit_count));
         t += bit_time;
@@ -129,10 +148,12 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
         t += bit_time;
         stop_bit_count--;
         if (stop_bit_count == 0) {
-          state = WAITING_FOR_DATA;
-          init_transmit(i, buffer, buf_length, rdptr, wrptr, p_txd, state,
-                        bit_count, t, bit_time, byte);
+          state = STOP_BIT_SENT;
+          init_transmit(rdptr, wrptr, state, t, clock_sync_required);
         }
+        break;
+      case STOP_BIT_SENT:
+        state = WAITING_FOR_DATA;
         break;
       }
     break;
@@ -145,11 +166,11 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
       buffer_was_full = 0;
       buffer[wrptr] = data;
       wrptr++;
-      if (wrptr == buf_length)
+      if (wrptr == buf_length) {
         wrptr = 0;
+      }
 
-      init_transmit(i, buffer, buf_length, rdptr, wrptr, p_txd, state,
-                    bit_count, t, bit_time, byte);
+      init_transmit(rdptr, wrptr, state, t, clock_sync_required);
       break;
 
     case i.get_available_buffer_size(void) -> size_t available:
@@ -163,27 +184,22 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
     case !isnull(config) => config.set_baud_rate(unsigned baud_rate):
       bit_time = XS1_TIMER_HZ / baud_rate;
       state = WAITING_FOR_DATA;
-      init_transmit(i, buffer, buf_length, rdptr, wrptr, p_txd, state,
-                    bit_count, t, bit_time, byte);
+      init_transmit(rdptr, wrptr, state, t, clock_sync_required);
       break;
     case !isnull(config) => config.set_parity(uart_parity_t new_parity):
       parity = new_parity;
       state = WAITING_FOR_DATA;
-      init_transmit(i, buffer, buf_length, rdptr, wrptr, p_txd, state,
-                    bit_count, t, bit_time, byte);
-
+      init_transmit(rdptr, wrptr, state, t, clock_sync_required);
       break;
     case !isnull(config) => config.set_stop_bits(unsigned new_stop_bits):
       stop_bits = new_stop_bits + 1;
       state = WAITING_FOR_DATA;
-      init_transmit(i, buffer, buf_length, rdptr, wrptr, p_txd, state,
-                    bit_count, t, bit_time, byte);
+      init_transmit(rdptr, wrptr, state, t, clock_sync_required);
       break;
     case !isnull(config) => config.set_bits_per_byte(unsigned bpb):
       bits_per_byte = bpb;
       state = WAITING_FOR_DATA;
-      init_transmit(i, buffer, buf_length, rdptr, wrptr, p_txd, state,
-                    bit_count, t, bit_time, byte);
+      init_transmit(rdptr, wrptr, state, t, clock_sync_required);
       break;
 #endif
     }

@@ -19,8 +19,9 @@ class DriveHigh(xmostest.SimThread):
 
         xsi.drive_port_pins(self._p, 1);
 
+
 class UARTRxChecker(xmostest.SimThread):
-    def __init__(self, rx_port, tx_port, parity, baud, length, stop_bits, bpb, data=[0x7f, 0x00, 0x2f, 0xff],
+    def __init__(self, rx_port, tx_port, parity, baud, stop_bits, bpb, data=[0x7f, 0x00, 0x2f, 0xff],
                  intermittent=False):
         """
         Create a UARTRxChecker instance.
@@ -29,7 +30,6 @@ class UARTRxChecker(xmostest.SimThread):
         :param tx_port:    Transmit port of the UART device under test.
         :param parity:     Parity of the UART connection.
         :param baud:       BAUD rate of the UART connection.
-        :param length:     Length of transmission to check.
         :param stop_bits:  Number of stop_bits for each UART byte.
         :param bpb:        Number of data bits per "byte" of UART data.
         :param data:       A list of bytes to send (default: [0x7f, 0x00, 0x2f, 0xff])
@@ -39,7 +39,6 @@ class UARTRxChecker(xmostest.SimThread):
         self._tx_port = tx_port
         self._parity = parity
         self._baud = baud
-        self._length = length
         self._stop_bits = stop_bits
         self._bits_per_byte = bpb
         self._data = data
@@ -76,7 +75,7 @@ class UARTRxChecker(xmostest.SimThread):
 
     def send_data(self, xsi, byte):
         """
-        Write the data bits to the rx_port 
+        Write the data bits to the rx_port
 
         :param xsi:        XMOS Simulator Instance.
         :param byte:       Data to send.
@@ -91,7 +90,7 @@ class UARTRxChecker(xmostest.SimThread):
     def send_parity(self, xsi, byte):
         """
         Send the parity bit to the rx_port
-        
+
         :param xsi:        XMOS Simulator Instance.
         :param byte:       Data to send parity of.
         """
