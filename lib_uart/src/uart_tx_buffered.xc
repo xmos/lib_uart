@@ -132,18 +132,24 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
         if (bit_count == bits_per_byte) {
           if (parity != UART_PARITY_NONE) {
             state = OUTPUTTING_PARITY_BIT;
-          } else {
+            parity_val = parity32(byte, parity);
+          } else if (stop_bits) {
             stop_bit_count = stop_bits;
             state = OUTPUTTING_STOP_BIT;
+          } else {
+            state = STOP_BIT_SENT;
           }
         }
         break;
       case OUTPUTTING_PARITY_BIT:
-        int val = parity32(byte, parity);
-        p_txd.output(val);
+        p_txd.output(parity_val);
         t += bit_time;
-        stop_bit_count = stop_bits;
-        state = OUTPUTTING_STOP_BIT;
+        if (stop_bits) {
+          stop_bit_count = stop_bits;
+          state = OUTPUTTING_STOP_BIT;
+        } else {
+         state = STOP_BIT_SENT;
+        }
         break;
       case OUTPUTTING_STOP_BIT:
         p_txd.output(1);
