@@ -21,19 +21,18 @@
  */
 typedef struct multi_uart_tx_info_t {
     /** Configuration constants */
-    int bits_per_byte; /**< length of the UART char */
-    int uart_word_len; /**< number of bits in UART word e.g. Start bit + 8 bit data + parity + 2 stop bits is 12 bit UART word */
-    int clocks_per_bit; /**< define baud rate in relation to max baud rate */
+    unsigned bits_per_byte; /**< length of the UART char */
+    unsigned uart_word_len; /**< number of bits in UART word e.g. Start bit + 8 bit data + parity + 2 stop bits is 12 bit UART word */
+    unsigned clocks_per_bit; /**< define baud rate in relation to max baud rate */
 
     /** Mode definition */
-    int num_stop_bits;
+    unsigned num_stop_bits;
     uart_parity_t parity;
 
     /** Buffering variables */
-    int wr_ptr; /**< Write pointer */
-    int rd_ptr; /**< Read pointer */
-    unsigned nelements; /**< Number of valid entries in the buffer */
-    unsigned buf[MUART_TX_BUF_SIZE]; /**< Buffer array */
+    size_t wr_ptr; /**< Write pointer */
+    size_t rd_ptr; /**< Read pointer */
+    uint32_t buf[MUART_TX_BUF_SIZE]; /**< Buffer array */
 
 } multi_uart_tx_info_t;
 
@@ -103,6 +102,7 @@ void multi_uart_tx_buffer(server interface multi_uart_tx_if i_tx,
 
   /* MUART_TX_BUF_SIZE must be a power of 2 */
   assert((MUART_TX_BUF_SIZE >> clz(bitrev(MUART_TX_BUF_SIZE))) == 1);
+  assert((bits_per_byte > 0) && (bits_per_byte <= 8) && "Invalid number of bits per byte");
 
   unsigned initial_clocks_per_bit = clock_rate_hz / baud;
 
@@ -112,8 +112,9 @@ void multi_uart_tx_buffer(server interface multi_uart_tx_if i_tx,
     tx_slot_info[i].parity = parity;
     tx_slot_info[i].bits_per_byte = bits_per_byte;
     tx_slot_info[i].uart_word_len = 1 + bits_per_byte + stop_bits;
-    if (tx_slot_info[i].parity != UART_PARITY_NONE)
+    if (tx_slot_info[i].parity != UART_PARITY_NONE) {
       tx_slot_info[i].uart_word_len += 1;
+    }
     tx_slot_info[i].rd_ptr = 0;
     tx_slot_info[i].wr_ptr = 0;
   }
@@ -163,9 +164,10 @@ void multi_uart_tx_buffer(server interface multi_uart_tx_if i_tx,
           tx_slot_info[index].num_stop_bits = stop_bits;
         }
         break;
-      case i_tx.set_bits_per_byte(size_t index, unsigned bpb):
+      case i_tx.set_bits_per_byte(size_t index, unsigned bits_per_byte):
+        assert((bits_per_byte > 0) && (bits_per_byte <= 8) && "Invalid number of bits per byte");
         unsafe {
-          tx_slot_info[index].bits_per_byte = bpb;
+          tx_slot_info[index].bits_per_byte = bits_per_byte;
         }
         break;
     }
@@ -175,7 +177,7 @@ void multi_uart_tx_buffer(server interface multi_uart_tx_if i_tx,
 #pragma unsafe arrays
 void multi_uart_tx_pins(chanend c,
                         out buffered port:8 p,
-                        size_t clock_rate_hz)
+                        unsigned clock_rate_hz)
 {
   unsigned port_val;
   unsigned ts;

@@ -43,7 +43,7 @@ static inline int buffer_full(int rdptr, int wrptr, int buf_length)
   return (wrptr == rdptr);
 }
 
-static inline void init_transmit(int &rdptr, int &wrptr,
+static inline void init_transmit(size_t &rdptr, size_t &wrptr,
                                  enum uart_tx_state &state, int &t,
                                  int &clock_sync_required)
 {
@@ -76,16 +76,18 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
                       unsigned stop_bits,
                       client output_gpio_if p_txd)
 {
-  unsigned char buffer[buf_length];
+  uint8_t buffer[buf_length];
   int bit_time = XS1_TIMER_HZ / baud;
   enum uart_tx_state state = WAITING_FOR_DATA;
-  unsigned byte;
+  uint8_t byte;
   timer tmr;
-  int rdptr = 0, wrptr = 0;
+  size_t rdptr = 0, wrptr = 0;
   unsigned bit_count, stop_bit_count;
   int clock_sync_required = 0;
+  int parity_val;
 
   assert(!UART_TX_DISABLE_DYNAMIC_CONFIG || isnull(config));
+  assert((bits_per_byte > 0) && (bits_per_byte <= 8) && "Invalid number of bits per byte");
 
   int t;
   p_txd.output(1);
@@ -158,7 +160,7 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
       }
     break;
     // Handle client interaction with the component
-    case i.write(unsigned char data) -> int buffer_was_full:
+    case i.write(uint8_t data) -> int buffer_was_full:
       if (buffer_full(rdptr, wrptr, buf_length)) {
         buffer_was_full = 1;
         return;
@@ -197,6 +199,7 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
       init_transmit(rdptr, wrptr, state, t, clock_sync_required);
       break;
     case !isnull(config) => config.set_bits_per_byte(unsigned bpb):
+      assert((bpb > 0) && (bpb <= 8) && "Invalid number of bits per byte");
       bits_per_byte = bpb;
       state = WAITING_FOR_DATA;
       init_transmit(rdptr, wrptr, state, t, clock_sync_required);

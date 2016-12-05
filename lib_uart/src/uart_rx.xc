@@ -35,11 +35,9 @@ static inline int parity32(unsigned x, enum uart_parity_t parity)
   return (x & 1);
 }
 
-
-
-static inline int add_to_buffer(unsigned char buffer[n], unsigned n,
-                                unsigned &rdptr, unsigned &wrptr,
-                                unsigned char data)
+static inline int add_to_buffer(uint8_t buffer[n], unsigned n,
+                                size_t &rdptr, size_t &wrptr,
+                                uint8_t data)
 {
   int new_wrptr = wrptr + 1;
 
@@ -59,7 +57,6 @@ static inline int add_to_buffer(unsigned char buffer[n], unsigned n,
   return 1;
 }
 
-
 [[combinable]]
 void uart_rx(server interface uart_rx_if c,
              server interface uart_config_if ?config,
@@ -70,17 +67,20 @@ void uart_rx(server interface uart_rx_if c,
              unsigned stop_bits,
              client input_gpio_if p_rxd)
 {
-  unsigned char buffer[n];
-  int data_bit_count;
+  uint8_t buffer[n];
+  unsigned data_bit_count;
   timer tmr;
   enum uart_rx_state state = WAITING_FOR_HIGH;
   int t;
   unsigned bit_time = (XS1_TIMER_HZ / baud);
   int stop_bit_count;
   unsigned data;
-  unsigned rdptr = 0, wrptr = 0;
+  size_t rdptr = 0, wrptr = 0;
   p_rxd.event_when_pins_eq(1);
+
   assert(!UART_RX_DISABLE_DYNAMIC_CONFIG || isnull(config));
+  assert((bits_per_byte > 0) && (bits_per_byte <= 8) && "Invalid number of bits per byte");
+
   while (1) {
     select {
     // The following cases implement the uart state machine
@@ -175,7 +175,7 @@ void uart_rx(server interface uart_rx_if c,
       }
       break;
 
-    case c.read() -> unsigned char data:
+    case c.read() -> uint8_t data:
       if (rdptr == wrptr)
         break;
       data = buffer[rdptr];
@@ -206,6 +206,7 @@ void uart_rx(server interface uart_rx_if c,
       state = WAITING_FOR_HIGH;
       break;
     case !isnull(config) => config.set_bits_per_byte(unsigned bpb):
+      assert((bpb > 0) && (bpb <= 8) && "Invalid number of bits per byte");
       bits_per_byte = bpb;
       p_rxd.event_when_pins_eq(1);
       state = WAITING_FOR_HIGH;
@@ -214,7 +215,6 @@ void uart_rx(server interface uart_rx_if c,
     }
   }
 }
-
 
 extends client interface uart_rx_if : {
   extern inline uint8_t wait_for_data_and_read(client uart_rx_if i);

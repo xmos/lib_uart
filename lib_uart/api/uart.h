@@ -34,9 +34,9 @@ typedef interface uart_config_if {
    */
   void set_stop_bits(unsigned stop_bits);
 
-  /** Set number of bits per byte used by a UART.
+  /** Set number of bits per byte used by a UART (must be in the range [1-8])
    */
-  void set_bits_per_byte(unsigned bpb);
+  void set_bits_per_byte(unsigned bits_per_byte);
 } uart_config_if;
 
 
@@ -102,9 +102,10 @@ extends client interface uart_rx_if : {
  *                         reconfigure the UART
  *    \param buffer_size   the size of the buffer
  *    \param baud          the initial baud rate
- *    \param parity        the intiial parity setting
- *    \param bits_per_byte the initial number of bits per byte
- *    \param stop_bits     the intiial number of stop bits
+ *    \param parity        the initial parity setting
+ *    \param bits_per_byte the initial number of bits per byte (must be
+ *                         in the range [1-8])
+ *    \param stop_bits     the initial number of stop bits
  *    \param p_rxd         the gpio interface to input data on
  */
 [[combinable]]
@@ -188,13 +189,14 @@ typedef interface uart_tx_if {
  *
  *  This function implements an unbuffered UART transmitter.
  *
- *    \param   i_data      interface enabling client to send data.
- *    \param   i_config    interface enabling client to configure the UART.
- *    \param baud          the initial baud rate.
- *    \param parity        the intiial parity setting.
- *    \param bits_per_byte the initial number of bits per byte.
- *    \param stop_bits     the intiial number of stop bits.
- *    \param p_txd         the gpio interface to output data on.
+ *    \param i_data        interface enabling client to send data
+ *    \param i_config      interface enabling client to configure the UART
+ *    \param baud          the initial baud rate
+ *    \param parity        the initial parity setting
+ *    \param bits_per_byte the initial number of bits per byte (must be in
+ *                         the range [1-8])
+ *    \param stop_bits     the initial number of stop bits
+ *    \param p_txd         the gpio interface to output data on
 
  */
 [[distributable]]
@@ -250,14 +252,15 @@ typedef interface uart_tx_buffered_if {
  *  This function implements a UART transmitter. Data sent to the task will
  *  be placed in a buffer and sent at the rate of the UART.
  *
- *    \param i_data        interface enabling client to send data.
- *    \param i_config      interface enabling client to configure the UART.
- *    \param buffer_size   the size of the transmit buffer in bytes.
- *    \param baud          the initial baud rate.
- *    \param parity        the intiial parity setting.
- *    \param bits_per_byte the initial number of bits per byte.
- *    \param stop_bits     the intiial number of stop bits.
- *    \param p_txd         the gpio interface to output data on.
+ *    \param i_data        interface enabling client to send data
+ *    \param i_config      interface enabling client to configure the UART
+ *    \param buffer_size   the size of the transmit buffer in bytes
+ *    \param baud          the initial baud rate
+ *    \param parity        the initial parity setting
+ *    \param bits_per_byte the initial number of bits per byte (must be in
+ *                         the range [1-8])
+ *    \param stop_bits     the initial number of stop bits
+ *    \param p_txd         the gpio interface to output data on
  */
 [[combinable]]
 void uart_tx_buffered(server interface uart_tx_buffered_if i_data,
@@ -327,16 +330,16 @@ typedef interface uart_control_if {
  *  the same wire. The application explicitly control whether the component
  *  is in transmit or receive mode.
  *
- *  \param i_tx           interface for transmitting data.
- *  \param i_rx           interface for receiving data.
- *  \param i_control      interface for controlling the direction of the UART.
- *  \param i_config       interface for configuring the UART.
- *  \param tx_buf_length  the size of the transmit buffer (in bytes).
- *  \param rx_buf_length  the size of the receive buffer (in bytes).
- *  \param baud           baud rate.
- *  \param parity         the parity of the UART.
- *  \param bits_per_byte  bits per byte.
- *  \param stop_bits      The number of stop bits (0,1 or 2)
+ *  \param i_tx           interface for transmitting data
+ *  \param i_rx           interface for receiving data
+ *  \param i_control      interface for controlling the direction of the UART
+ *  \param i_config       interface for configuring the UART
+ *  \param tx_buf_length  the size of the transmit buffer (in bytes)
+ *  \param rx_buf_length  the size of the receive buffer (in bytes)
+ *  \param baud           baud rate
+ *  \param parity         the parity of the UART
+ *  \param bits_per_byte  bits per byte (must be in the range [1-8])
+ *  \param stop_bits      The number of stop bits
  *  \param p_uart         the 1-bit port to send/recieve the UART signals.
  */
 void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
@@ -373,7 +376,7 @@ interface multi_uart_rx_if {
    *  If several UARTS have data available then the data is read out in a
    *  round-robin fashion.
    *
-   *  \param  index        This index of the UART to read from.
+   *  \param  index        This index of the UART to read from
    *  \param  data         The data byte read
    *  \returns             An enum type that indicates if the data is valid
    */
@@ -384,13 +387,13 @@ interface multi_uart_rx_if {
    *  This call will stop the mulit-UART component so that the UARTs can be
    *  reconfigured.
    */
-  void pause();
+  void pause(void);
 
   /** Restart the multi-UART RX component after reconfiguration.
    *
    *  This call will restart the multi-UART component.
    */
-  void restart();
+  void restart(void);
 
   /** Set the baud rate of a UART.
    *
@@ -398,7 +401,7 @@ interface multi_uart_rx_if {
    *  The rate must be a divisor of the clock rate of the underlying
    *  clock used for the component.
    *
-   *  \param   index       The index of the UART to configure.
+   *  \param   index       The index of the UART to configure
    *  \param   baud_rate   The required baud rate
    */
   void set_baud_rate(size_t index, unsigned baud_rate);
@@ -419,7 +422,7 @@ interface multi_uart_rx_if {
    *  This call will set the number of stop bits of one of the UARTs.
    *
    *  \param   index       The index of the UART
-   *  \param   stop_bits   The number of stop bits (0,1 or 2)
+   *  \param   stop_bits   The number of stop bits
    */
   void set_stop_bits(size_t index, unsigned stop_bits);
 
@@ -427,10 +430,11 @@ interface multi_uart_rx_if {
    *
    *  This call will set the number of stop bits of one of the UARTs.
    *
-   *  \param   index       The index of the UART
-   *  \param   bpb         The number of bits per byte (5,6,7 or 8)
+   *  \param   index          The index of the UART
+   *  \param   bits_per_byte  The number of bits per byte (must be in the
+   *                          range [1-8])
    */
-  void set_bits_per_byte(size_t index, unsigned bpb);
+  void set_bits_per_byte(size_t index, unsigned bits_per_byte);
 } [[sametile]];
 
 typedef interface multi_uart_rx_if multi_uart_rx_if;
@@ -446,18 +450,18 @@ inline void multi_uart_data_ready(streaming chanend c_rx, size_t &index);
  *  is the same for all UARTs and cannot be changed dynamically.
  *
  *  \param  c               a chanend used internally for high speed communication
- *  \param  i               the interface for getting data from the task.
- *  \param  p               the multibit port.
+ *  \param  i               the interface for getting data from the task
+ *  \param  p               the multibit port
  *  \param  clk             a clock block for the component to use. This needs
  *                          to be set to run of the reference clock (the default
- *                          state for clock blocks).
+ *                          state for clock blocks)
  *  \param  num_uarts       the number of uarts to run (must be less than or
  *                          equal to the width of \p)
  *  \param  clock_rate_hz   the clock rate in Hz
- *  \param  baud            baud rate.
- *  \param  parity          the parity of the UART.
- *  \param  bits_per_byte   bits per byte.
- *  \param  stop_bits       number of stop bits.
+ *  \param  baud            baud rate
+ *  \param  parity          the parity of the UART
+ *  \param  bits_per_byte   bits per byte (must be in the range [1-8])
+ *  \param  stop_bits       number of stop bits
  */
 void multi_uart_rx(streaming chanend c,
                    server interface multi_uart_rx_if i,
@@ -483,8 +487,8 @@ interface multi_uart_tx_if {
    *  This function checks whether the application can write data to
    *  a specific UART.
    *
-   *  \param  index     The index of the UART to check.
-   *  \returns          non-zero if the slot is free (i.e. data can be sent).
+   *  \param  index     The index of the UART to check
+   *  \returns          non-zero if the slot is free (i.e. data can be sent)
    */
   int is_slot_free(size_t index);
 
@@ -495,8 +499,8 @@ interface multi_uart_tx_if {
    *  that UART is not available then the data is ignored (use
    *  is_tx_slot_free() to determine availability).
    *
-   *  \param  index      The index of the UART to write to.
-   *  \param  data       The data to write.
+   *  \param  index      The index of the UART to write to
+   *  \param  data       The data to write
    */
   void write(size_t index, uint8_t data);
 
@@ -505,13 +509,13 @@ interface multi_uart_tx_if {
    *  This call will stop the mulit-UART component so that the UARTs can be
    *  reconfigured.
    */
-  void pause();
+  void pause(void);
 
   /** Restart the multi-UART RX component after reconfiguration.
    *
    *  This call will restart the multi-UART component.
    */
-  void restart();
+  void restart(void);
 
   /** Set the baud rate of a UART.
    *
@@ -540,7 +544,7 @@ interface multi_uart_tx_if {
    *  This call will set the number of stop bits of one of the UARTs.
    *
    *  \param   index       The index of the UART
-   *  \param   stop_bits   The number of stop bits (0,1 or 2)
+   *  \param   stop_bits   The number of stop bits
    */
   void set_stop_bits(size_t index, unsigned stop_bits);
 
@@ -548,10 +552,11 @@ interface multi_uart_tx_if {
    *
    *  This call will set the number of stop bits of one of the UARTs.
    *
-   *  \param   index       The index of the UART
-   *  \param   bpb         The number of bits per byte (5,6,7 or 8)
+   *  \param   index          The index of the UART
+   *  \param   bits_per_byte  The number of bits per byte (must be in the
+   *                          range [1-8])
    */
-  void set_bits_per_byte(size_t index, unsigned bpb);
+  void set_bits_per_byte(size_t index, unsigned bits_per_byte);
 } [[sametile]];
 
 typedef interface multi_uart_tx_if multi_uart_tx_if;
@@ -564,15 +569,15 @@ typedef interface multi_uart_tx_if multi_uart_tx_if;
  *  is the same for all UARTs and cannot be changed dynamically.
  *
  *  \param  c               a chanend used internally for high speed communication
- *  \param  i               the interface for sending data to the task.
- *  \param  p               the multibit port.
+ *  \param  i               the interface for sending data to the task
+ *  \param  p               the multibit port
  *  \param  num_uarts       the number of uarts to run (must be less than or
  *                          equal to the width of \p)
  *  \param  clock_rate_hz   the clock rate in Hz
- *  \param  baud            baud rate.
- *  \param  parity          the parity of the UART.
- *  \param  bits_per_byte   bits per byte.
- *  \param  stop_bits       number of stop bits.
+ *  \param  baud            baud rate
+ *  \param  parity          the parity of the UART
+ *  \param  bits_per_byte   bits per byte (must be in the range [1-8])
+ *  \param  stop_bits       number of stop bits
  */
 void multi_uart_tx(chanend c,
                    server interface multi_uart_tx_if i,

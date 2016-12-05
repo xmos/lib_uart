@@ -34,11 +34,14 @@ void uart_tx(server interface uart_tx_if i,
 {
   int bit_time = XS1_TIMER_HZ / baud;
   timer tmr;
+
   assert(!UART_TX_DISABLE_DYNAMIC_CONFIG || isnull(config));
+  assert((bits_per_byte > 0) && (bits_per_byte <= 8) && "Invalid number of bits per byte");
+
   p_txd.output(1);
   while (1) {
     select {
-    case i.write(unsigned char data):
+    case i.write(uint8_t data):
       // Trace the outgoing data
       xscope_char(UART_TX_VALUE, data);
       int t;
@@ -77,6 +80,7 @@ void uart_tx(server interface uart_tx_if i,
       stop_bits = new_stop_bits + 1;
       break;
     case !isnull(config) => config.set_bits_per_byte(unsigned bpb):
+      assert((bpb > 0) && (bpb <= 8) && "Invalid number of bits per byte");
       bits_per_byte = bpb;
       break;
 #endif
