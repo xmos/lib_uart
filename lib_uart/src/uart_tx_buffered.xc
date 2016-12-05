@@ -194,7 +194,7 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
       init_transmit(rdptr, wrptr, state, t, clock_sync_required);
       break;
     case !isnull(config) => config.set_stop_bits(unsigned new_stop_bits):
-      stop_bits = new_stop_bits + 1;
+      stop_bits = new_stop_bits;
       state = WAITING_FOR_DATA;
       init_transmit(rdptr, wrptr, state, t, clock_sync_required);
       break;

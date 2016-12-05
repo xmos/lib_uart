@@ -77,7 +77,7 @@ void uart_tx(server interface uart_tx_if i,
       parity = new_parity;
       break;
     case !isnull(config) => config.set_stop_bits(unsigned new_stop_bits):
-      stop_bits = new_stop_bits + 1;
+      stop_bits = new_stop_bits;
       break;
     case !isnull(config) => config.set_bits_per_byte(unsigned bpb):
       assert((bpb > 0) && (bpb <= 8) && "Invalid number of bits per byte");
