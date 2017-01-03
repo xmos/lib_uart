@@ -1,6 +1,5 @@
 import xmostest
 from uart_rx_checker import UARTRxChecker, Parity as RxParity
-from uart_tx_checker import UARTTxChecker, Parity as TxParity
 
 
 def do_test(baud):
@@ -8,14 +7,12 @@ def do_test(baud):
     path = "app_uart_test_half_duplex_rx"
     resources = xmostest.request_resource("xsim")
 
-    rx_checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", RxParity['UART_PARITY_NONE'], baud, 4, 1, 8)
-    # tx_checker = UARTTxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1A", TxParity['UART_PARITY_NONE'], baud, 4, 1, 8)
+    rx_checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", RxParity['UART_PARITY_NONE'], baud, 1, 8)
 
     tester = xmostest.ComparisonTester(open('test_half_duplex_rx_uart.expect'),
                                        "lib_uart", "sim_regression", "half_duplex_tx_simple", myenv,
                                        regexp=True)
 
-    # Only want no parity @ 230400 baud for smoke tests
     if baud != 115200:
         tester.set_min_testlevel('nightly')
 

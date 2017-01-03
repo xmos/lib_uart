@@ -214,7 +214,9 @@ un-buffered.
 The buffered UART will buffer characters written to the
 UART. It requires a separate logical core to feed characters from the
 buffer to the UART pin. This frees the application to perform other
-processing.
+processing. The buffered UART will inform the application that data has been
+transmitted and that there is more space in the buffer by calling the
+:c:func:`ready_to_transmit` notification.
 
 The unbuffered UART does not take its own logical core but calls to
 ``write`` will block until the character has been sent.
@@ -270,11 +272,11 @@ fast/streaming UART functions (see :ref:`fast_uart_api`) e.g.::
 Half-duplex UART usage
 ......................
 
-The half-duplexcomponents are instantiated as parallel tasks that run in a
+The half-duplex components are instantiated as parallel tasks that run in a
 ``par`` statement. The application
-connects via an three interface connections: the ``uart_rx_if`` (for
+connects via three interface connections: the ``uart_rx_if`` (for
 receiving data), the ``uart_tx_if`` (for transmitting data) and the
-``uart_control_if)`` (for controlling the current direction of the UART).
+``uart_control_if`` (for controlling the current direction of the UART).
 The component also has an optional configuration
 interface that lets the application change the speed and properties of
 the UART at run time.
@@ -293,9 +295,9 @@ component and connects to it::
 
   int main() {
     interface uart_rx_if i_rx;
-    interface uart_control_if i_control1;
+    interface uart_control_if i_control;
     interface uart_tx_buffered_if i_tx;
-   
+
     par {
       on tile[0] : uart_half_duplex(i_tx, i_rx, i_control, null,
                                     TX_BUFFER_SIZE, RX_BUFFER_SIZE,
@@ -303,7 +305,7 @@ component and connects to it::
 
       on tile[0] : app(i_rx, i_tx, i_control);
     }
-   
+
 The application can use the interfaces in the same manner as a
 standard UART. The control interface can be used to change direction e.g.::
 
@@ -349,15 +351,15 @@ component and connects to them::
     streaming chan c_rx;
     chan c_tx;
     interface multi_uart_tx_if i_tx;
-   
+
     // Set the rx and tx lines to be clocked off the clk_uart clock block
     configure_in_port(p_uart_rx, clk_uart);
     configure_out_port(p_uart_tx, clk_uart, 0);
-   
+
     // Configure an external clock for the clk_uart clock block
     configure_clock_src(clk_uart, p_uart_clk);
     start_clock(clk_uart);
-   
+
     // Start the rx/tx tasks and the application task
     par {
       multi_uart_rx(c_rx, i_rx, p_uart_rx, 8, 1843200, 115200, UART_PARITY_NONE, 8, 1);
@@ -374,11 +376,11 @@ multi-UART interfaces e.g.::
                 chanend c_tx, client multi_uart_tx_if i_tx)
   {
     size_t uart_num;
-   
+
     // Configure each task with a chanend
     i_rx.init(c_rx);
     i_tx.init(c_tx);
-    
+
     while (1) {
       select {
       case multi_uart_data_ready(c_rx, uart_num):
@@ -409,7 +411,7 @@ RX port to run of a clock that is sourced by an incoming port::
 
     // Set the rx line to be clocked off the clk_uart clock block
     configure_in_port(p_uart_rx, clk_uart);
-   
+
     // Configure an external clock for the clk_uart clock block
     configure_clock_src(clk_uart, p_uart_clk);
     start_clock(clk_uart);

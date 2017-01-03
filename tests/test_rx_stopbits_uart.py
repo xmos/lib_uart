@@ -10,7 +10,7 @@ def do_test(baud, stopbits):
     resources = xmostest.request_resource("xsim")
 
     checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B",
-                            Parity['UART_PARITY_NONE'], baud, 4, stopbits, 8)
+                            Parity['UART_PARITY_NONE'], baud, stopbits, 8)
     tester = xmostest.ComparisonTester(open('test_rx_stopbits_uart.expect'),
                                        "lib_uart", "sim_regression", "rx_stopbits", myenv,
                                        regexp=True)

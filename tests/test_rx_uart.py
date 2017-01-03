@@ -8,12 +8,11 @@ def do_test(baud):
     path = "app_uart_test_rx"
     resources = xmostest.request_resource("xsim")
 
-    checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", Parity['UART_PARITY_NONE'], baud, 64, 1, 8)
+    checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", Parity['UART_PARITY_NONE'], baud, 1, 8)
     tester = xmostest.ComparisonTester(open('test_rx_uart.expect'),
                                        "lib_uart", "sim_regression", "rx", myenv,
                                        regexp=True)
 
-    # Only want no parity @ 230400 baud for smoke tests
     if baud != 115200:
         tester.set_min_testlevel('nightly')
 

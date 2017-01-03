@@ -10,7 +10,7 @@ def do_test(baud, parity, bpb):
     resources = xmostest.request_resource("xsim")
 
     checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B",
-                            Parity[parity], baud, 4, 1, bpb,
+                            Parity[parity], baud, 1, bpb,
                             [0x00, 0x1a, 0x07, 0x12])
     tester = xmostest.ComparisonTester(open('test_rx_bpb_uart.expect'),
                                        "lib_uart", "sim_regression", "rx_bpb", myenv,

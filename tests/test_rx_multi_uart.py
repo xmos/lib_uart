@@ -8,8 +8,8 @@ def do_test(baud):
     path = "app_uart_test_multi_rx"
     resources = xmostest.request_resource("xsim")
 
-    rx_checker = UARTRxChecker("tile[0]:XS1_PORT_8B.0", "tile[0]:XS1_PORT_1A", RxParity['UART_PARITY_NONE'], baud, 4, 1, 8, data=[0x7f, 0x00, 0x2f, 0xff])
-    rx_checker2 = UARTRxChecker("tile[0]:XS1_PORT_8B.2", "tile[0]:XS1_PORT_1A", RxParity['UART_PARITY_NONE'], baud/2, 4, 1, 8, data=[0xaa, 0x01, 0xfc, 0x8e])
+    rx_checker = UARTRxChecker("tile[0]:XS1_PORT_8B.0", "tile[0]:XS1_PORT_1A", RxParity['UART_PARITY_NONE'], baud, 1, 8, data=[0x7f, 0x00, 0x2f, 0xff])
+    rx_checker2 = UARTRxChecker("tile[0]:XS1_PORT_8B.2", "tile[0]:XS1_PORT_1A", RxParity['UART_PARITY_NONE'], baud/2, 1, 8, data=[0xaa, 0x01, 0xfc, 0x8e])
     uart_clock = UARTClockDevice("tile[0]:XS1_PORT_1L", 1843200)
 
     drive_high0 = DriveHigh("tile[0]:XS1_PORT_8B.1")
@@ -18,7 +18,6 @@ def do_test(baud):
                                        "lib_uart", "sim_regression", "multi_rx_simple", myenv,
                                        regexp=True)
 
-    # Only want no parity @ 230400 baud for smoke tests
     if baud != 115200:
         tester.set_min_testlevel('nightly')
 

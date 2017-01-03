@@ -1,5 +1,4 @@
 import xmostest
-from uart_rx_checker import UARTRxChecker, Parity as RxParity
 from uart_tx_checker import UARTTxChecker, Parity as TxParity
 
 
@@ -8,8 +7,6 @@ def do_test(baud, parity):
     path = "app_uart_test_half_duplex"
     resources = xmostest.request_resource("xsim")
 
-    # rx_checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1A", RxParity['UART_PARITY_NONE'], baud, 4, 1,
-    #                            8)
     tx_checker = UARTTxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1A", TxParity[parity], baud, 4, 1, 8)
 
     tester = xmostest.ComparisonTester(open('test_half_duplex_tx_uart.expect'),
