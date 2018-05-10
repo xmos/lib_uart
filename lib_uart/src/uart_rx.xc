@@ -49,8 +49,6 @@ static inline int add_to_buffer(uint8_t buffer[n], unsigned n,
     return 0;
   }
 
-  // Output tracing information of the values entering the buffer
-  xscope_char(UART_RX_VALUE, data);
 
   buffer[wrptr] = data;
   wrptr = new_wrptr;

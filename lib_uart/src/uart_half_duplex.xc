@@ -42,7 +42,6 @@ static inline void init_transmit(uint8_t buffer[buf_length],
     byte = buffer[rdptr];
 
     // Trace the outgoing data
-    xscope_char(UART_TX_VALUE, byte);
 
     rdptr++;
     if (rdptr == buf_length)
