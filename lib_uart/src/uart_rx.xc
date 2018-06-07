@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2016, XMOS Ltd, All rights reserved
+// Copyright (c) 2014-2018, XMOS, All rights reserved.
 
 #include "uart.h"
 #include "xassert.h"
