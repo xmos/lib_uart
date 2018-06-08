@@ -115,7 +115,10 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
         if (rdptr == buf_length) {
           rdptr = 0;
         }
-
+        #ifdef UART_TX_VALUE
+          // Trace the outgoing data
+          xscope_char(UART_TX_VALUE, byte);
+        #endif
 
         bit_count = 0;
 
