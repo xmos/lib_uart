@@ -15,7 +15,7 @@ class UartTester(xmostest.Tester):
                                  {}, result, output=''.join(output))
 
 
-def runtests():
+def runtest():
     resources = xmostest.request_resource("xsim")
     # xmostest.run_on_simulator(resources['xsim'],
     #                           'app_uart_test/bin/smoke/app_uart_test_smoke.xe',

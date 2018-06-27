@@ -29,7 +29,7 @@ def do_test(baud, parity, bpb):
                               build_env=myenv)
 
 
-def runtests():
+def runtest():
     for baud in [14400, 57600, 115200]:
         for parity in ['UART_PARITY_NONE', 'UART_PARITY_ODD', 'UART_PARITY_EVEN']:
             for bpb in [5, 7, 8]:
