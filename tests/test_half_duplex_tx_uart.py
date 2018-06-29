@@ -27,7 +27,7 @@ def do_test(baud, parity):
                               build_env=myenv)
 
 
-def runtests():
+def runtest():
     for baud in [115200, 57600, 28800]:
         for parity in ['UART_PARITY_NONE', 'UART_PARITY_EVEN', 'UART_PARITY_ODD']:
             do_test(baud, parity)

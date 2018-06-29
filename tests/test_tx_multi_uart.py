@@ -29,7 +29,7 @@ def do_test(baud, internal_clock):
                               build_env=myenv)
 
 
-def runtests():
+def runtest():
     for baud in [57600, 115200]:
         for internal_clock in [0, 1]:
             do_test(baud, internal_clock)

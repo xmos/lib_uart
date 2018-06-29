@@ -28,7 +28,7 @@ def do_test(baud, stopbits):
                               build_env=myenv)
 
 
-def runtests():
+def runtest():
     for baud in [14400, 57600, 115200]:
         for stopbits in [1, 2, 3]:
             do_test(baud, stopbits)

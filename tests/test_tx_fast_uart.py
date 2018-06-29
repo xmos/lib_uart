@@ -27,7 +27,7 @@ def do_test(baud):
                               build_env=myenv)
 
 
-def runtests():
+def runtest():
     return False
     # for baud in [230400, 460800, 921600]:
     # do_test(baud)
