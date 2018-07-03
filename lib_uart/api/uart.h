@@ -456,7 +456,7 @@ inline void multi_uart_data_ready(streaming chanend c_rx, size_t &index);
  *                          to be set to run of the reference clock (the default
  *                          state for clock blocks)
  *  \param  num_uarts       the number of uarts to run (must be less than or
- *                          equal to the width of \p)
+ *                          equal to the width of \p p)
  *  \param  clock_rate_hz   the clock rate in Hz
  *  \param  baud            baud rate
  *  \param  parity          the parity of the UART
@@ -572,7 +572,7 @@ typedef interface multi_uart_tx_if multi_uart_tx_if;
  *  \param  i               the interface for sending data to the task
  *  \param  p               the multibit port
  *  \param  num_uarts       the number of uarts to run (must be less than or
- *                          equal to the width of \p)
+ *                          equal to the width of \p p)
  *  \param  clock_rate_hz   the clock rate in Hz
  *  \param  baud            baud rate
  *  \param  parity          the parity of the UART

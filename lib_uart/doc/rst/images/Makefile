@@ -13,6 +13,9 @@ _uncropped/%.pdf: %.odg | _uncropped
 %.pdf: _uncropped/%.pdf
 	pdfcrop $< $@
 
+wavedrom:
+	WaveDromEditor source data_sequence.js png data_sequence.png
+
 clean:
 	-rm $(PDFS)
 	-rm _uncropped/*.pdf
