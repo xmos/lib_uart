@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2016, XMOS Ltd, All rights reserved
+// Copyright (c) 2014-2018, XMOS, All rights reserved.
 
 #include "uart.h"
 #include "xassert.h"
@@ -49,8 +49,10 @@ static inline int add_to_buffer(uint8_t buffer[n], unsigned n,
     return 0;
   }
 
-  // Output tracing information of the values entering the buffer
-  xscope_char(UART_RX_VALUE, data);
+  #ifdef UART_RX_VALUE
+    // Output tracing information of the values entering the buffer
+    xscope_char(UART_RX_VALUE, data);
+  #endif
 
   buffer[wrptr] = data;
   wrptr = new_wrptr;

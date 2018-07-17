@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2016, XMOS Ltd, All rights reserved
+// Copyright (c) 2014-2018, XMOS, All rights reserved.
 
 // UART API Header
 #include "uart.h"
@@ -41,8 +41,10 @@ static inline void init_transmit(uint8_t buffer[buf_length],
         return;
     byte = buffer[rdptr];
 
-    // Trace the outgoing data
-    xscope_char(UART_TX_VALUE, byte);
+    #ifdef UART_TX_VALUE
+        // Trace the outgoing data
+        xscope_char(UART_TX_VALUE, byte);
+    #endif
 
     rdptr++;
     if (rdptr == buf_length)
@@ -74,10 +76,11 @@ static inline int add_to_buffer(uint8_t buffer[n], unsigned n,
     // buffer full
     return 0;
   }
-
-  // Output tracing information of the values entering the buffer
-  // xscope_char(UART_RX_VALUE, data);
-
+  #ifdef UART_RX_VALUE
+    // Output tracing information of the values entering the buffer
+    xscope_char(UART_RX_VALUE, data);
+  #endif
+  
   buffer[wrptr] = data;
   wrptr = new_wrptr;
   return 1;
