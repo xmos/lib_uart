@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2016, XMOS Ltd, All rights reserved
+// Copyright (c) 2014-2018, XMOS Ltd, All rights reserved
 
 #include "uart.h"
 #include "xassert.h"
@@ -164,12 +164,13 @@ void uart_rx(server interface uart_rx_if c,
         if (level_test == 0) {
           p_rxd.event_when_pins_eq(1);
           state = WAITING_FOR_HIGH;
-        }
-        stop_bit_count--;
-        t += bit_time;
-        if (stop_bit_count == 0) {
-          p_rxd.event_when_pins_eq(0);
-          state = WAITING_FOR_INPUT;
+        } else {
+          stop_bit_count--;
+          t += bit_time;
+          if (stop_bit_count == 0) {
+            p_rxd.event_when_pins_eq(0);
+            state = WAITING_FOR_INPUT;
+          }
         }
         break;
       }
