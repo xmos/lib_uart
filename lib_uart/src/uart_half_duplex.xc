@@ -6,8 +6,6 @@
 
 #include <xclib.h>
 #include <xs1.h>
-#include <xscope.h>
-
 #include "xassert.h"
 
 static inline int parity32(unsigned x, uart_parity_t parity)
@@ -41,9 +39,6 @@ static inline void init_transmit(uint8_t buffer[buf_length],
         return;
     byte = buffer[rdptr];
 
-    // Trace the outgoing data
-    xscope_char(UART_TX_VALUE, byte);
-
     rdptr++;
     if (rdptr == buf_length)
     rdptr = 0;
@@ -74,9 +69,6 @@ static inline int add_to_buffer(uint8_t buffer[n], unsigned n,
     // buffer full
     return 0;
   }
-
-  // Output tracing information of the values entering the buffer
-  // xscope_char(UART_RX_VALUE, data);
 
   buffer[wrptr] = data;
   wrptr = new_wrptr;
