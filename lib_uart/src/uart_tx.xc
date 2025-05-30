@@ -4,7 +4,6 @@
 #include <xs1.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <xscope.h>
 #include "xassert.h"
 
 #ifndef UART_TX_DISABLE_DYNAMIC_CONFIG
@@ -42,8 +41,6 @@ void uart_tx(server interface uart_tx_if i,
   while (1) {
     select {
     case i.write(uint8_t data):
-      // Trace the outgoing data
-      xscope_char(UART_TX_VALUE, data);
       int t;
       // Output start bit
       p_txd.output(0);

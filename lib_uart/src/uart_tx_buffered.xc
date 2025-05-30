@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <print.h>
-#include <xscope.h>
 #include "xassert.h"
 #include "debug_print.h"
 
@@ -115,9 +114,6 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
         if (rdptr == buf_length) {
           rdptr = 0;
         }
-
-        // Trace the outgoing data
-        xscope_char(UART_TX_VALUE, byte);
 
         bit_count = 0;
 
