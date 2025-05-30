@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 include($ENV{XMOS_CMAKE_PATH}/xcommon.cmake)
-project(uart_streaming_demo)
+project(app_uart_streaming_demo)
 
 set(APP_HW_TARGET XK-EVK-XU316)
 set(APP_COMPILER_FLAGS -g -O2 -save-temps)
