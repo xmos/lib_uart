@@ -1,32 +1,21 @@
-import xmostest
-import os
-from xmostest.xmostest_subprocess import call
+
+import pytest
+import Pyxsim
+from Pyxsim import testers
 from uart_tx_checker import UARTTxChecker, Parity
 
-
-def do_test(baud):
-    myenv = {'baud': baud}
-    path = "app_uart_test_intermittent"
-    resources = xmostest.request_resource("xsim")
+# 230400 on smoke
+@pytest.mark.parametrize("baud", [57600, 115200, 230400])
+def test_tx_intermittent_uart(baud, capfd):
+    build_opts = [f"BAUD={baud}"]
+    bin_path = f"app_uart_test_intermittent/bin/{baud}/app_uart_test_intermittent_{baud}.xe"
+    sim_args = []
 
     checker = UARTTxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", Parity['UART_PARITY_NONE'], baud, 64, 1, 8)
-    tester = xmostest.ComparisonTester(open('test_tx_intermittent_uart.expect'),
-                                       "lib_uart", "sim_regression", "tx_intermittent", myenv,
-                                       regexp=True)
+    file = open('expect/test_tx_intermittent_uart.expect')
+    expected = [x.strip() for x in file.readlines()]
+    expected = [x.strip() for x in expected if x != ""]
 
-    # Only want no parity @ 230400 baud for smoke tests
-    if baud != 230400:
-        tester.set_min_testlevel('nightly')
-
-    xmostest.run_on_simulator(resources['xsim'],
-                              'app_uart_test_intermittent/bin/smoke/app_uart_test_intermittent_smoke.xe',
-                              simthreads=[checker],
-                              xscope_io=True,
-                              tester=tester,
-                              clean_before_build=True,
-                              build_env=myenv)
-
-
-def runtest():
-    for baud in [57600, 115200, 230400]:
-        do_test(baud)
+    tester = testers.ComparisonTester(expected, regexp=True)
+    assert Pyxsim.run_on_simulator(bin_path, simthreads=[checker], tester=tester, 
+                                    simargs=sim_args,capfd=capfd, build_options=build_opts)

@@ -1,34 +1,18 @@
-import xmostest
-import os
-from xmostest.xmostest_subprocess import call
+
+import pytest
+import Pyxsim
+from Pyxsim import testers
 from uart_rx_checker import UARTRxChecker, Parity
 
+# 115200 and 2 are smoke
+@pytest.mark.parametrize("baud", [14400, 57600, 115200])
+@pytest.mark.parametrize("stopbits", [1, 2, 3])
+def test_rx_stopbits_uart(baud, stopbits, capfd):
+    build_opts = [f"BAUD={baud}", f"STOPBITS={stopbits}"]
+    bin_path = f"app_uart_test_rx_stopbits/bin/{baud}_{stopbits}/app_uart_test_rx_stopbits_{baud}_{stopbits}.xe"
+    sim_args = []
 
-def do_test(baud, stopbits):
-    myenv = {'stop_bits': stopbits, 'baud': baud}
-    path = "app_uart_test_rx_stopbits"
-    resources = xmostest.request_resource("xsim")
-
-    checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B",
-                            Parity['UART_PARITY_NONE'], baud, stopbits, 8)
-    tester = xmostest.ComparisonTester(open('test_rx_stopbits_uart.expect'),
-                                       "lib_uart", "sim_regression", "rx_stopbits", myenv,
-                                       regexp=True)
-
-    # Only want 115200 baud w/ 2 stopbits for smoke tests
-    if baud != 115200 or stopbits != 2:
-        tester.set_min_testlevel('nightly')
-
-    xmostest.run_on_simulator(resources['xsim'],
-                              'app_uart_test_rx_stopbits/bin/smoke/app_uart_test_rx_stopbits_smoke.xe',
-                              simthreads=[checker],
-                              xscope_io=True,
-                              tester=tester,
-                              clean_before_build=True,
-                              build_env=myenv)
-
-
-def runtest():
-    for baud in [14400, 57600, 115200]:
-        for stopbits in [1, 2, 3]:
-            do_test(baud, stopbits)
+    checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", Parity["UART_PARITY_NONE"], baud, stopbits, 8)
+    tester = testers.ComparisonTester(open('expect/test_rx_stopbits_uart.expect'), regexp=True)
+    assert Pyxsim.run_on_simulator(bin_path, simthreads=[checker], tester=tester, 
+                                    simargs=sim_args,capfd=capfd, build_options=build_opts)

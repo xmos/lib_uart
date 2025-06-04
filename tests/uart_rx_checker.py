@@ -1,6 +1,6 @@
 from random import randint
 
-import xmostest
+from Pyxsim import SimThread, Xsi
 
 Parity = dict(
     UART_PARITY_EVEN=0,
@@ -10,17 +10,17 @@ Parity = dict(
 )
 
 
-class DriveHigh(xmostest.SimThread):
+class DriveHigh(SimThread):
     def __init__(self, p):
         self._p = p
 
     def run(self):
         xsi = self.xsi
 
-        xsi.drive_port_pins(self._p, 1);
+        xsi.drive_port_pins(self._p, 1)
 
 
-class UARTRxChecker(xmostest.SimThread):
+class UARTRxChecker(SimThread):
     def __init__(self, rx_port, tx_port, parity, baud, stop_bits, bpb, data=[0x7f, 0x00, 0x2f, 0xff],
                  intermittent=False):
         """
@@ -53,15 +53,19 @@ class UARTRxChecker(xmostest.SimThread):
         :param byte:       Byte to send
         """
         # Send start bit
+        # print("sending start bit")
         self.send_start(xsi)
 
         # Send data
+        # print("sending data ", byte)
         self.send_data(xsi, byte)
 
         # Send parity
+        # print("sending parity")
         self.send_parity(xsi, byte)
 
         # Send stop bit(s)
+        # print("sending stop")
         self.send_stop(xsi)
 
     def send_start(self, xsi):
@@ -131,16 +135,19 @@ class UARTRxChecker(xmostest.SimThread):
         """
         Returns the expected time between bits for the currently set BAUD rate.
 
-        Returns float value in nanoseconds.
+        Returns float value in femtoseconds.
         """
-        # Return float value in ns
-        return (1.0 / self._baud) * 1e9
+        return (1.0 / self._baud) * Xsi.get_xsi_tick_freq_hz()
 
     def wait_baud_time(self, xsi):
         """
         Wait for 1 bit time, as determined by the baud rate.
         """
         self.wait_until(xsi.get_time() + self.get_bit_time())
+        # time = xsi.get_time()
+        # bit_time = self.get_bit_time()
+        # self.wait_until(time + bit_time)
+        # print(f"time now {time:.2f} fs, bit time {bit_time:.2f} ps")
 
     def wait_half_baud_time(self, xsi):
         """
@@ -157,7 +164,7 @@ class UARTRxChecker(xmostest.SimThread):
         self.wait((lambda _x: self.xsi.is_port_driving(self._tx_port)))
 
         # If we're doing an intermittent send, add a delay between each byte
-        # sent. Delay is in ns. 20,000ns = 20ms, 100,000ns = 100ms. Delays could
+        # sent. Delay is in ns. 20,000fs = 20ps, 100,000fs = 100ps. Delays could
         # be more variable, but it hurts test time substantially.
         if self._intermittent:
             for x in self._data:

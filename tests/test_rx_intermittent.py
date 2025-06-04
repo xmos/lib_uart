@@ -1,34 +1,19 @@
-import xmostest
-import os
-from xmostest.xmostest_subprocess import call
+
+import pytest
+import Pyxsim
+from Pyxsim import testers
 from uart_rx_checker import UARTRxChecker, Parity
 
-
-def do_test(baud):
-    myenv = {'baud': baud, 'parity': 'UART_PARITY_EVEN'}
-    path = "app_uart_test_rx_intermittent"
-    resources = xmostest.request_resource("xsim")
+# 115200 on smoke
+@pytest.mark.parametrize("baud", [57600, 115200])
+def test_rx_intermittent(baud, capfd):
+    build_opts = [f"BAUD={baud}"]
+    bin_path = f"app_uart_test_rx_intermittent/bin/{baud}/app_uart_test_rx_intermittent_{baud}.xe"
+    sim_args = []
 
     checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B",
                             Parity['UART_PARITY_BAD'], baud, 1, 8,
                             data=range(50), intermittent=True)
-    tester = xmostest.ComparisonTester(open('test_rx_intermittent_uart.expect'),
-                                       "lib_uart", "sim_regression", "rx_intermittent", myenv,
-                                       regexp=True)
-
-    if baud != 115200:
-        tester.set_min_testlevel('nightly')
-
-    xmostest.run_on_simulator(resources['xsim'],
-                              'app_uart_test_rx_intermittent/bin/smoke/app_uart_test_rx_intermittent_smoke.xe',
-                              simthreads=[checker],
-                              xscope_io=True,
-                              tester=tester,
-                              simargs=["--vcd-tracing", "-tile tile[0] -ports -o trace.vcd"],
-                              clean_before_build=True,
-                              build_env=myenv)
-
-
-def runtest():
-    for baud in [57600, 115200]:
-        do_test(baud)
+    tester = testers.ComparisonTester(open('expect/test_rx_intermittent_uart.expect'), regexp=True)
+    assert Pyxsim.run_on_simulator(bin_path, simthreads=[checker], tester=tester, 
+                                    simargs=sim_args,capfd=capfd, build_options=build_opts)

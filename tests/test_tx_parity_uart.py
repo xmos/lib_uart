@@ -1,33 +1,23 @@
-import xmostest
-import os
-from xmostest.xmostest_subprocess import call
+
+import pytest
+import Pyxsim
+from Pyxsim import testers
 from uart_tx_checker import UARTTxChecker, Parity
 
-
-def do_test(baud, parity):
-    myenv = {'parity': parity, 'baud': baud}
-    path = "app_uart_test_parity"
-    resources = xmostest.request_resource("xsim")
+# 115200 and even on smoke
+@pytest.mark.parametrize("baud", [14400, 57600, 115200, 230400])
+@pytest.mark.parametrize("parity", ['UART_PARITY_NONE', 'UART_PARITY_EVEN', 'UART_PARITY_ODD'])
+def test_tx_parity_uart(baud, parity, capfd):
+    build_opts = [f"BAUD={baud}", f"PARITY={parity}"]
+    bin_path = f"app_uart_test_parity/bin/{baud}_{parity}/app_uart_test_parity_{baud}_{parity}.xe"
+    sim_args = []
 
     checker = UARTTxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", Parity[parity], baud, 4, 1, 8)
-    tester = xmostest.ComparisonTester(open('test_tx_parity_uart.expect'),
-                                       "lib_uart", "sim_regression", "tx_parity", myenv,
-                                       regexp=True)
 
-    # Only want no parity @ 115200 baud for smoke tests
-    if baud != 115200 or parity != 'UART_PARITY_EVEN':
-        tester.set_min_testlevel('nightly')
+    file = open('expect/test_tx_parity_uart.expect')
+    expected = [x.strip() for x in file.readlines()]
+    expected = [x.strip() for x in expected if x != ""]
 
-    xmostest.run_on_simulator(resources['xsim'],
-                              'app_uart_test_parity/bin/smoke/app_uart_test_parity_smoke.xe',
-                              simthreads=[checker],
-                              xscope_io=True,
-                              tester=tester,
-                              clean_before_build=True,
-                              build_env=myenv)
-
-
-def runtest():
-    for baud in [14400, 57600, 115200, 230400]:
-        for parity in ['UART_PARITY_NONE', 'UART_PARITY_EVEN', 'UART_PARITY_ODD']:
-            do_test(baud, parity)
+    tester = testers.ComparisonTester(expected, regexp=True)
+    assert Pyxsim.run_on_simulator(bin_path, simthreads=[checker], tester=tester, 
+                                    simargs=sim_args,capfd=capfd, build_options=build_opts)
