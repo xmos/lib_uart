@@ -57,11 +57,16 @@ pipeline {
           dir("${REPO}/tests") {
             createVenv(reqFile: "requirements.txt")
             withVenv{
-              runPytest("--numprocesses=auto")
+              runPytest("--numprocesses=auto --dist=worksteal -v")
             }
           }
         } // tools
       }
     } // Tests
+  }
+  post {
+    cleanup {
+      xcoreCleanSandbox()
+    }
   }
 }

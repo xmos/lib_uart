@@ -29,7 +29,10 @@ class UARTTxChecker(SimThread):
         """
         self._rx_port = rx_port
         self._tx_port = tx_port
-        self._parity = parity
+        if isinstance(parity, str):
+            self._parity = Parity[parity]
+        else:
+            self._parity = parity
         self._baud = baud
         self._length = length
         self._stop_bits = stop_bits
@@ -58,19 +61,6 @@ class UARTTxChecker(SimThread):
         :rtype:            float
         """
         return (1.0/self._baud) * Xsi.get_xsi_tick_freq_hz()
-
-    def wait_baud_time(self, xsi):
-        """
-        Wait for 1 bit time, as determined by the baud rate.
-        """
-        self.wait_until(xsi.get_time() + self.get_bit_time())
-        return True
-
-    def wait_half_baud_time(self, xsi):
-        """
-        Wait for half a bit time, as determined by the baud rate.
-        """
-        self.wait_until(xsi.get_time() + (self.get_bit_time() / 2))
 
     def read_packet(self, xsi, parity, length=4):
         """

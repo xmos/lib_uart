@@ -37,7 +37,10 @@ class UARTRxChecker(SimThread):
         """
         self._rx_port = rx_port
         self._tx_port = tx_port
-        self._parity = parity
+        if isinstance(parity, str):
+            self._parity = Parity[parity]
+        else:
+            self._parity = parity
         self._baud = baud
         self._stop_bits = stop_bits
         self._bits_per_byte = bpb
@@ -53,19 +56,15 @@ class UARTRxChecker(SimThread):
         :param byte:       Byte to send
         """
         # Send start bit
-        # print("sending start bit")
         self.send_start(xsi)
 
         # Send data
-        # print("sending data ", byte)
         self.send_data(xsi, byte)
 
         # Send parity
-        # print("sending parity")
         self.send_parity(xsi, byte)
 
         # Send stop bit(s)
-        # print("sending stop")
         self.send_stop(xsi)
 
     def send_start(self, xsi):
@@ -144,10 +143,6 @@ class UARTRxChecker(SimThread):
         Wait for 1 bit time, as determined by the baud rate.
         """
         self.wait_until(xsi.get_time() + self.get_bit_time())
-        # time = xsi.get_time()
-        # bit_time = self.get_bit_time()
-        # self.wait_until(time + bit_time)
-        # print(f"time now {time:.2f} fs, bit time {bit_time:.2f} ps")
 
     def wait_half_baud_time(self, xsi):
         """

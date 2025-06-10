@@ -14,8 +14,13 @@ static void uart_test(streaming chanend stream, unsigned baud_rate)
   debug_printf("TEST CONFIG:{'baud rate':%d}\n", baud_rate);
   debug_printf("Performing tx test.\n");
 
-  for(int i = 0; i < 256; i++)
+  for(int i = 0; i < 128; i++)
     uart_tx_streaming_write_byte(stream, i);
+
+  timer tmr;
+  int t;
+  tmr :> t;
+  tmr when timerafter(t+(1000000/baud_rate)*10000+50000) :> void;
   _Exit(0);
 }
 

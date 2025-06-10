@@ -1,21 +1,13 @@
 
 import pytest
-import Pyxsim
-from Pyxsim import testers
-from uart_tx_checker import UARTTxChecker, Parity
+from uart_tx_checker import UARTTxChecker
 
 # 230400 on smoke
 @pytest.mark.parametrize("baud", [57600, 115200, 230400])
-def test_tx_intermittent_uart(baud, capfd):
-    build_opts = [f"BAUD={baud}"]
+def test_tx_intermittent_uart(baud, do_test):
     bin_path = f"app_uart_test_intermittent/bin/{baud}/app_uart_test_intermittent_{baud}.xe"
-    sim_args = []
+    expect_path = 'expect/test_tx_intermittent_uart.expect'
 
-    checker = UARTTxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", Parity['UART_PARITY_NONE'], baud, 64, 1, 8)
-    file = open('expect/test_tx_intermittent_uart.expect')
-    expected = [x.strip() for x in file.readlines()]
-    expected = [x.strip() for x in expected if x != ""]
+    checker = UARTTxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", 'UART_PARITY_NONE', baud, 64, 1, 8)
 
-    tester = testers.ComparisonTester(expected, regexp=True)
-    assert Pyxsim.run_on_simulator(bin_path, simthreads=[checker], tester=tester, 
-                                    simargs=sim_args,capfd=capfd, build_options=build_opts)
+    do_test(bin_path, expect_path, checker)

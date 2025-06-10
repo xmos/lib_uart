@@ -1,6 +1,12 @@
 UART Library Change Log
 =======================
 
+UNRELEASED
+----------
+
+  * FIXED: Added an idle state initialisation in uart_tx_streaming()
+  * FIXED: Fixed ILLEGAL_INSTRUCTION exception when using multi_uart_rx()
+
 3.1.0
 -----
 

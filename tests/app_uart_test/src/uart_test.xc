@@ -207,17 +207,8 @@ int main() {
     on tile[0].core[0] : input_gpio_1bit_with_events(i_gpio_rx, p_rx);
     on tile[0].core[0] : uart_rx(i_rx, i_rx_config, BUFFER_SIZE,
                                  115200, UART_PARITY_NONE, 8, 1, i_gpio_rx);
-    on tile[0] : {
-      #if SMOKE_TEST
-      unsigned rates[] = {115200};
-      #else
-      unsigned rates[] = {2400, 9600, 19200};
-      #endif
-      for (int i = 0; i < ARRAY_SIZE(rates); i++) {
-        uart_test(i_tx, i_tx_config, i_rx, i_rx_config, rates[i]);
-      }
-      _Exit(0);
-     }
+    on tile[0] : uart_test(i_tx, i_tx_config, i_rx, i_rx_config, BAUD);
+
     par (int i=0;i<6;i++)
     on tile[0]: while(1);
    }

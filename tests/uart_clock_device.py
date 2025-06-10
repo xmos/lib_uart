@@ -1,6 +1,6 @@
-import xmostest
+from Pyxsim import SimThread
 
-class UARTClockDevice(xmostest.SimThread):
+class UARTClockDevice(SimThread):
     def __init__(self, clock_port, clock_frequency):
         """
         Create a clock input to a given port for the XCore.
@@ -15,13 +15,13 @@ class UARTClockDevice(xmostest.SimThread):
         xsi = self.xsi
         time = xsi.get_time()
 
-        # (1s/(freq))/2 = T for 1 edge. 1s = 1e9ns, 0.5s = 5e8ns
-        half_period_ns = float(5e8) / self._clock_frequency
+        # (1s/(freq))/2 = T for 1 edge. 1s = 1e15fs, 0.5s = 5e14fs
+        half_period_fs = float(5e14) / self._clock_frequency
         while True:
             xsi.drive_port_pins(self._clock_port, 1)
-            self.wait_until(time + half_period_ns)
-            time += half_period_ns
+            self.wait_until(time + half_period_fs)
+            time += half_period_fs
 
             xsi.drive_port_pins(self._clock_port, 0)
-            self.wait_until(time + half_period_ns)
-            time += half_period_ns
+            self.wait_until(time + half_period_fs)
+            time += half_period_fs

@@ -1,18 +1,13 @@
 
 import pytest
-import Pyxsim
-from Pyxsim import testers
-from uart_rx_checker import UARTRxChecker, Parity
-
+from uart_rx_checker import UARTRxChecker
 
 # 115200 on smoke
 @pytest.mark.parametrize("baud", [57600, 115200])
-def test_rx_bad_uart(baud, capfd):
-    build_opts = [f"BAUD={baud}"]
+def test_rx_bad_uart(baud, do_test):
     bin_path = f"app_uart_test_rx_bad/bin/{baud}/app_uart_test_rx_bad_{baud}.xe"
-    sim_args = []
+    expect_path = "expect/test_rx_bad_uart.expect"
 
-    checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", Parity['UART_PARITY_BAD'], baud, 1, 8)
-    tester = testers.ComparisonTester(open('expect/test_rx_bad_uart.expect'), regexp=True)
-    assert Pyxsim.run_on_simulator(bin_path, simthreads=[checker], tester=tester, 
-                                    simargs=sim_args,capfd=capfd, build_options=build_opts)
+    checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", "UART_PARITY_BAD", baud, 1, 8)
+
+    do_test(bin_path, expect_path, checker)
