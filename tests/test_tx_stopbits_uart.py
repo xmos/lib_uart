@@ -1,34 +1,14 @@
-import xmostest
-import os
-from xmostest.xmostest_subprocess import call
-from uart_tx_checker import UARTTxChecker, Parity
 
+import pytest
+from uart_tx_checker import UARTTxChecker
 
-def do_test(baud, stopbits):
-    myenv = {'baud': baud, 'stop_bits': stopbits}
-    path = "app_uart_test_stopbits"
-    resources = xmostest.request_resource("xsim")
+# 115200 and 2 are smoke
+@pytest.mark.parametrize("baud", [14400, 57600, 115200])
+@pytest.mark.parametrize("stopbits", [1, 2, 3])
+def test_tx_stopbits_uart(baud, stopbits, do_test):
+    bin_path = f"app_uart_test_stopbits/bin/{baud}_{stopbits}/app_uart_test_stopbits_{baud}_{stopbits}.xe"
+    expect_path = "expect/test_tx_parity_uart.expect"
 
-    checker = UARTTxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", Parity['UART_PARITY_NONE'], baud, 4, stopbits,
-                            8)
-    tester = xmostest.ComparisonTester(open('test_tx_parity_uart.expect'),
-                                       "lib_uart", "sim_regression", "tx_stopbits", myenv,
-                                       regexp=True)
+    checker = UARTTxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B", "UART_PARITY_NONE", baud, 4, stopbits, 8)
 
-    # Only want no parity @ 115200 baud for smoke tests
-    if baud != 115200 or stopbits != 2:
-        tester.set_min_testlevel('nightly')
-
-    xmostest.run_on_simulator(resources['xsim'],
-                              'app_uart_test_stopbits/bin/smoke/app_uart_test_stopbits_smoke.xe',
-                              simthreads=[checker],
-                              xscope_io=True,
-                              tester=tester,
-                              clean_before_build=True,
-                              build_env=myenv)
-
-
-def runtest():
-    for baud in [14400, 57600, 115200, 230400]:
-        for stopbits in [1, 2, 3]:
-            do_test(baud, stopbits)
+    do_test(bin_path, expect_path, checker)

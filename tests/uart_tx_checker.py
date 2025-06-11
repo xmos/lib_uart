@@ -1,6 +1,6 @@
 from array import array
 
-import xmostest
+from Pyxsim import SimThread, Xsi
 
 Parity = dict(
     UART_PARITY_EVEN=0,
@@ -9,7 +9,7 @@ Parity = dict(
 )
 
 
-class UARTTxChecker(xmostest.SimThread):
+class UARTTxChecker(SimThread):
     """
     This simulator thread will act as a UART device, and will check sent and
     transations caused by the device, by looking at the tx pins.
@@ -29,7 +29,10 @@ class UARTTxChecker(xmostest.SimThread):
         """
         self._rx_port = rx_port
         self._tx_port = tx_port
-        self._parity = parity
+        if isinstance(parity, str):
+            self._parity = Parity[parity]
+        else:
+            self._parity = parity
         self._baud = baud
         self._length = length
         self._stop_bits = stop_bits
@@ -54,24 +57,10 @@ class UARTTxChecker(xmostest.SimThread):
         """
         Returns the expected time between bits for the currently set BAUD rate.
 
-        Returns float value in nanoseconds.
+        Returns float value in femtosecomds.
         :rtype:            float
         """
-        # Return float value in ns
-        return (1.0/self._baud) * 1e9
-
-    def wait_baud_time(self, xsi):
-        """
-        Wait for 1 bit time, as determined by the baud rate.
-        """
-        self.wait_until(xsi.get_time() + self.get_bit_time())
-        return True
-
-    def wait_half_baud_time(self, xsi):
-        """
-        Wait for half a bit time, as determined by the baud rate.
-        """
-        self.wait_until(xsi.get_time() + (self.get_bit_time() / 2))
+        return (1.0/self._baud) * Xsi.get_xsi_tick_freq_hz()
 
     def read_packet(self, xsi, parity, length=4):
         """
@@ -105,12 +94,12 @@ class UARTTxChecker(xmostest.SimThread):
         val = 0
 
         # Recv start bit
-        print "tx starts high: %s" % ("True" if self.get_port_val(xsi, self._tx_port) else "False")
+        print("tx starts high: %s" % ("True" if self.get_port_val(xsi, self._tx_port) else "False"))
         self.wait_for_port_pins_change([self._tx_port])
 
         # The tx line should go low for 1 bit time
         if self.get_val_timeout(xsi, self._tx_port) == 0:
-            print "Start bit recv'd"
+            print("Start bit recv'd")
         else:
             return False
 
@@ -128,7 +117,7 @@ class UARTTxChecker(xmostest.SimThread):
         self.check_stopbit(xsi)
 
         # Print a new line to split bytes in output
-        print ""
+        print("")
 
         return byte
 
@@ -143,11 +132,11 @@ class UARTTxChecker(xmostest.SimThread):
         if parity < 2:
             read = self.get_val_timeout(xsi, self._tx_port)
             if read == (crc_sum + parity) % 2:
-                print "Parity bit correct"
+                print("Parity bit correct")
             else:
-                print "Parity bit incorrect. Got %d, expected %d" % (read, (crc_sum + parity) % 2)
+                print("Parity bit incorrect. Got %d, expected %d" % (read, (crc_sum + parity) % 2))
         else:
-            print "Parity bit correct"
+            print("Parity bit correct")
 
     def check_stopbit(self, xsi):
         """
@@ -160,7 +149,7 @@ class UARTTxChecker(xmostest.SimThread):
             # The stop bits should stay high for this time
             if self.get_val_timeout(xsi, self._tx_port) == 0:
                 stop_bits_correct = False
-        print "tx ends high: %s" % ("True" if stop_bits_correct else "False")
+        print("tx ends high: %s" % ("True" if stop_bits_correct else "False"))
 
     def get_val_timeout(self, xsi, port):
         """
@@ -216,7 +205,7 @@ class UARTTxChecker(xmostest.SimThread):
 
         # Start value should *not* have changed during timeout
         if transitioned_during_wait:
-            print "FAIL :: Unexpected Transition."
+            print("FAIL :: Unexpected Transition.")
 
         return start_val
 
@@ -229,4 +218,4 @@ class UARTTxChecker(xmostest.SimThread):
 
         # Print each member of K as a hex byte
         # inline lambda function mapped over a list? awh yiss.
-        print ", ".join(map((lambda x: "0x%02x" % ord(x)), K))
+        print(", ".join(map((lambda x: "0x%02x" % ord(x)), K)))

@@ -9,6 +9,13 @@ def runningOn(machine) {
   println machine
 }
 
+def clone_test_deps() {
+  dir("${WORKSPACE}") {
+    sh "git clone git@github.com:xmos/test_support"
+    sh "git -C test_support checkout e62b73a1260069c188a7d8fb0d91e1ef80a3c4e1"
+  }
+}
+
 pipeline {
   agent {
     label 'x86_64 && linux'
@@ -43,5 +50,23 @@ pipeline {
         }
       }
     } // Checkout and build
+    stage("Tests"){
+      steps{
+        clone_test_deps()
+        withTools(params.TOOLS_VERSION) {
+          dir("${REPO}/tests") {
+            createVenv(reqFile: "requirements.txt")
+            withVenv{
+              runPytest("--numprocesses=auto --dist=worksteal -v")
+            }
+          }
+        } // tools
+      }
+    } // Tests
+  }
+  post {
+    cleanup {
+      xcoreCleanSandbox()
+    }
   }
 }

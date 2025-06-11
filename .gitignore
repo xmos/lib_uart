@@ -13,5 +13,7 @@
 **/html/*
 **/.settings/*
 *.pyc
+**/.venv*
+.python-version
 test_results.csv
 xscope_out.xmt

@@ -1,36 +1,18 @@
-import xmostest
 
-from uart_rx_checker import UARTRxChecker, Parity as RxParity
-from uart_tx_checker import UARTTxChecker, Parity as TxParity
+import pytest
+from uart_rx_checker import UARTRxChecker
+from uart_tx_checker import UARTTxChecker
 
-
-def do_test(baud):
-    myenv = {'baud': baud}
-    resources = xmostest.request_resource("xsim")
+# 115200 on smoke
+@pytest.mark.parametrize("baud", [115200, 57600, 28800, 14400])
+def test_loopback_uart(baud, do_test):
+    bin_path = f"app_uart_test_loopback/bin/{baud}/app_uart_test_loopback_{baud}.xe"
+    expect_path = "expect/test_loopback_uart.expect"
 
     rx_checker = UARTRxChecker("tile[0]:XS1_PORT_1A", "tile[0]:XS1_PORT_1B",
-                               RxParity['UART_PARITY_NONE'], baud, 1, 8)
+                               "UART_PARITY_NONE", baud, 1, 8)
 
     tx_checker = UARTTxChecker("tile[0]:XS1_PORT_1D", "tile[0]:XS1_PORT_1C",
-                               TxParity['UART_PARITY_NONE'], baud, 4, 1, 8)
+                               "UART_PARITY_NONE", baud, 4, 1, 8)
 
-    tester = xmostest.ComparisonTester(open('test_loopback_uart.expect'),
-                                       "lib_uart", "sim_regression", "loopback", myenv,
-                                       regexp=True)
-
-    if baud != 115200:
-        tester.set_min_testlevel('nightly')
-
-    xmostest.run_on_simulator(resources['xsim'],
-                              'app_uart_test_loopback/bin/{}/app_uart_test_loopback_{}.xe'.format(baud, baud),
-                              simthreads=[rx_checker, tx_checker],
-                              xscope_io=True,
-                              tester=tester,
-                              simargs=["--vcd-tracing", "-tile tile[0] -functions -ports -o trace.vcd"],
-                              clean_before_build=True,
-                              build_env=myenv)
-
-
-def runtest():
-    for baud in [14400, 28800, 57600, 115200]:
-        do_test(baud)
+    do_test(bin_path, expect_path, [rx_checker, tx_checker])

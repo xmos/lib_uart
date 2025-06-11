@@ -1,25 +1,21 @@
-import xmostest
 
+import sys
+import pytest
 
-class UartTester(xmostest.Tester):
-    def __init__(self):
-        super(UartTester, self).__init__()
-        self.register_test("lib_uart", "sim_regression", "loopback_test", {})
-
+class UartTester():
     def run(self, output):
-        result = True
         for line in output:
             if line.find("FAIL") != -1:
-                result = False
-        xmostest.set_test_result("lib_uart", "sim_regression", "loopback_test",
-                                 {}, result, output=''.join(output))
+                sys.stderr.write(line)
+                return False
+        return True
 
+# 115200 on smoke
+@pytest.mark.parametrize("baud", [2400, 9600, 19200, 115200])
+@pytest.mark.skip(reason="""currently hangs at "Reconfiguring parity to odd" test""")
+def test_uart(baud, do_test):
+    bin_path = f"app_uart_test/bin/{baud}/app_uart_test_{baud}.xe"
+    sim_args = ["--plugin", "LoopbackPort.dll", "-port tile[0] XS1_PORT_1A 1 0 -port tile[1] XS1_PORT_1B 1 0"]
 
-def runtest():
-    resources = xmostest.request_resource("xsim")
-    # xmostest.run_on_simulator(resources['xsim'],
-    #                           'app_uart_test/bin/smoke/app_uart_test_smoke.xe',
-    #                           xscope_io=True,
-    #                           loopback=[{'from': 'tile[0]:XS1_PORT_1A',
-    #                                      'to': 'tile[1]:XS1_PORT_1B'}],
-    #                           tester=UartTester())
+    tester = UartTester()
+    do_test(bin_path, sim_args = sim_args, tester = tester)

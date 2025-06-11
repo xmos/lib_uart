@@ -43,8 +43,8 @@ int main() {
   interface uart_tx_buffered_if i_tx;
 
   par {
-    on tile[0] : uart_half_duplex(i_tx, i_rx, i_control, NULL, BUFFER_SIZE, BUFFER_SIZE, 115200, UART_PARITY_NONE, 8, 1, p_uart);
-    on tile[0] : uart_test(i_rx, i_tx, i_control, 115200);
+    on tile[0] : uart_half_duplex(i_tx, i_rx, i_control, NULL, BUFFER_SIZE, BUFFER_SIZE, BAUD, UART_PARITY_NONE, 8, 1, p_uart);
+    on tile[0] : uart_test(i_rx, i_tx, i_control, BAUD);
   }
 
   return 0;

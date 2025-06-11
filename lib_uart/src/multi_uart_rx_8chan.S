@@ -46,7 +46,7 @@
 .cc_top uart_rx_loop_8.func, uart_rx_loop_8
 
 uart_rx_loop_8:
-    entsp STACK_SIZE
+    ENTSP_lu6 STACK_SIZE
 
     /* stack usage:
      * sp[1]  => callee save r4
