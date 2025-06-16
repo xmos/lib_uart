@@ -1,4 +1,3 @@
-.. include:: ../../../README.rst
 
 External signal description
 ---------------------------
@@ -97,8 +96,8 @@ The are four ways to use the UART library detailed in the table below.
      same core using a multibit port.
 
 All the UARTs use the XMOS multicore extensions to C (xC) to perform
-their operations, see the :ref:`XMOS Programming
-Guide<programming_guide>` for more details.
+their operations, see the `XMOS Programming
+Guide` for more details.
 
 |newpage|
 
@@ -413,7 +412,7 @@ RX port to run of a clock that is sourced by an incoming port::
     start_clock(clk_uart);
 
 For more information on configuring ports, please refer to the
-:ref:`XMOS Programming Guide<programming_guide>` for more details.
+`XMOS Programming Guide` for more details.
 
 The multi-UART components take an argument which is the speed of the
 underlying clock. This way the component can attain the correct BAUD
@@ -452,7 +451,8 @@ Standard UART API
 UART configuration interface
 ............................
 
-.. doxygeninterface:: uart_config_if
+.. doxygengroup:: uart_config_if
+  :no-link:
 
 |newpage|
 
@@ -470,7 +470,8 @@ UART receiver component
 UART receive interface
 ......................
 
-.. doxygeninterface:: uart_rx_if
+.. doxygengroup:: uart_rx_if
+  :no-link:
 
 |newpage|
 
@@ -488,14 +489,16 @@ UART transmitter components
 UART transmit interface
 .......................
 
-.. doxygeninterface:: uart_tx_if
+.. doxygengroup:: uart_tx_if
+  :no-link:
 
 |newpage|
 
 UART transmit interface (buffered)
 ..................................
 
-.. doxygeninterface:: uart_tx_buffered_if
+.. doxygengroup:: uart_tx_buffered_if
+  :no-link:
 
 |newpage|
 
@@ -531,7 +534,8 @@ Half-duplex control interface
 
 .. doxygenenum:: uart_half_duplex_mode_t
 
-.. doxygeninterface:: uart_control_if
+.. doxygengroup:: uart_control_if
+  :no-link:
 
 
 Multi-UART API
@@ -549,7 +553,8 @@ Multi-UART receive interface
 
 .. doxygenenum:: multi_uart_read_result_t
 
-.. doxygeninterface:: multi_uart_rx_if
+.. doxygengroup:: multi_uart_rx_if
+  :no-link:
 
 |newpage|
 
@@ -563,16 +568,5 @@ Multi-UART transmitter
 Multi-UART transmit interface
 .............................
 
-.. doxygeninterface:: multi_uart_tx_if
-
-|newpage|
-
-|appendix|
-
-Known Issues
-------------
-
-No known issues.
-
-.. include:: ../../../CHANGELOG.rst
-
+.. doxygengroup:: multi_uart_tx_if
+  :no-link:

@@ -18,7 +18,7 @@ def clone_test_deps() {
 
 pipeline {
   agent {
-    label 'x86_64 && linux'
+    label 'x86_64 && linux && documentation'
   }
   options {
     buildDiscarder(xmosDiscardBuildSettings())
@@ -31,6 +31,11 @@ pipeline {
       defaultValue: '15.3.1',
       description: 'The XTC tools version'
     )
+    string(
+          name: 'XMOSDOC_VERSION',
+          defaultValue: 'v7.1.0',
+          description: 'The xmosdoc version'
+        )
   }
   environment {
     REPO = "lib_uart"
@@ -50,6 +55,13 @@ pipeline {
         }
       }
     } // Checkout and build
+    stage("Docs"){
+      steps {
+        dir("${REPO}") {
+          buildDocs()
+        }
+      }
+    }// Docs
     stage("Tests"){
       steps{
         clone_test_deps()
@@ -63,6 +75,11 @@ pipeline {
         } // tools
       }
     } // Tests
+    stage("Archive sandbox"){
+      steps {
+        archiveSandbox(REPO)
+      }
+    } // Archive sandbox
   }
   post {
     cleanup {
