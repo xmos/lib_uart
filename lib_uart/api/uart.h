@@ -6,8 +6,16 @@
 #include <stddef.h>
 #include <xs1.h>
 #include <gpio.h>
+#include "xccompat.h"
 
-#ifdef __XC__
+#if defined(__XC__) || defined(__DOXYGEN__)
+
+#define out_port_t out port
+#define in_port_t in port
+#define streaming_chanend_t streaming chanend
+#define in_buffered_port_32_t in buffered port:32
+#define SERVER_NULLABLE_INTERFACE(type, name) server interface type ?name
+#define const_static_unsigned const static unsigned
 
 /** Type representing the parity of a UART */
 typedef enum uart_parity_t {
@@ -21,7 +29,14 @@ typedef enum uart_parity_t {
  *  This interface enables dynamic reconfiguration of a UART. It is used by
  *  several UART components to provide a method of configuration.
  */
+#ifndef __DOXYGEN__
 typedef interface uart_config_if {
+#endif // __DOXYGEN__
+  /**
+   * \addtogroup uart_config_if
+   * @{
+   */
+
   /** Set the baud rate of a UART.
    */
   void set_baud_rate(unsigned baud_rate);
@@ -37,8 +52,11 @@ typedef interface uart_config_if {
   /** Set number of bits per byte used by a UART (must be in the range [1-8])
    */
   void set_bits_per_byte(unsigned bits_per_byte);
-} uart_config_if;
 
+  /**@} */ // end of uart_config_if group
+#ifndef __DOXYGEN__
+} uart_config_if;
+#endif // __DOXYGEN__
 
 /*---------------------- Receiver API ---------------------------*/
 
@@ -47,7 +65,13 @@ typedef interface uart_config_if {
  *   This interface provides clients access to buffer uart receive
  *   functionality.
  */
+#ifndef __DOXYGEN__
 typedef interface uart_rx_if {
+#endif // __DOXYGEN__
+  /**
+   * \addtogroup uart_rx_if
+   * @{
+   */
   /** Get a byte from the receive buffer.
    *
    *   This function should be called after receiving a data_ready()
@@ -68,17 +92,19 @@ typedef interface uart_rx_if {
   /** Returns whether there is data in the buffer.
    */
   int has_data();
+
+#ifndef __DOXYGEN__
 } uart_rx_if;
 
 extends client interface uart_rx_if : {
-
+#endif // __DOXYGEN__
   /** Get a byte from the receive buffer.
    *
    *   This function will wait until there is data in the receive buffer
    *   of the uart and then fetch that data. On getting the data, it
    *   will clear the notification flag on the interface.
    */
-  inline uint8_t wait_for_data_and_read(client uart_rx_if i) {
+  inline uint8_t wait_for_data_and_read(CLIENT_INTERFACE(uart_rx_if, i)) {
     if (!i.has_data()) {
       select {
       case i.data_ready():
@@ -87,7 +113,10 @@ extends client interface uart_rx_if : {
     }
     return i.read();
   }
+/**@} */ // end of uart_rx_if group
+#ifndef __DOXYGEN__
 }
+#endif // __DOXYGEN__
 
 /** UART RX.
  *
@@ -109,14 +138,14 @@ extends client interface uart_rx_if : {
  *    \param p_rxd         the gpio interface to input data on
  */
 [[combinable]]
-void uart_rx(server interface uart_rx_if i_data,
-             server interface uart_config_if ?i_config,
-             const static unsigned buffer_size,
+void uart_rx(SERVER_INTERFACE(uart_rx_if, i_data),
+             SERVER_NULLABLE_INTERFACE(uart_config_if, i_config),
+             const_static_unsigned buffer_size,
              unsigned baud,
              enum uart_parity_t parity,
              unsigned bits_per_byte,
              unsigned stop_bits,
-             client input_gpio_if p_rxd);
+             CLIENT_INTERFACE(input_gpio_if, p_rxd));
 
 /** Fast/Streaming UART RX.
  *
@@ -138,7 +167,7 @@ void uart_rx(server interface uart_rx_if i_data,
  *                       100 Mhz reference clock then this value
  *                       should be at least 10.
  */
-void uart_rx_streaming(in port p, streaming chanend c, int ticks_per_bit);
+void uart_rx_streaming(in_port_t p, streaming_chanend_t c, int ticks_per_bit);
 
 /** Receive a byte from a streaming UART receiver.
  *
@@ -163,7 +192,7 @@ void uart_rx_streaming(in port p, streaming chanend c, int ticks_per_bit);
  *                  data
  */
 #pragma select handler
-void uart_rx_streaming_read_byte(streaming chanend c, uint8_t &data);
+void uart_rx_streaming_read_byte(streaming_chanend_t c, REFERENCE_PARAM(uint8_t, data));
 
 /*---------------------- Transmitter API ---------------------------*/
 
@@ -172,8 +201,13 @@ void uart_rx_streaming_read_byte(streaming chanend c, uint8_t &data);
  *  This interface provides functions for transmitting data on an
  *  unbuffered UART.
  */
+#ifndef __DOXYGEN__
 typedef interface uart_tx_if {
-
+#endif // __DOXYGEN__
+  /**
+   * \addtogroup uart_tx_if
+   * @{
+   */
   /** Write a byte to a UART.
    *
    *  This function writes a byte of data to a UART. It will output
@@ -182,7 +216,10 @@ typedef interface uart_tx_if {
    *  \param data  The data to write.
    */
   void write(uint8_t data);
+  /**@} */ // end of uart_tx_if group
+#ifndef __DOXYGEN__
 } uart_tx_if;
+#endif // __DOXYGEN__
 
 
 /** UART transmitter.
@@ -200,13 +237,13 @@ typedef interface uart_tx_if {
 
  */
 [[distributable]]
-void uart_tx(server interface uart_tx_if i_data,
-             server interface uart_config_if ?i_config,
+void uart_tx(SERVER_INTERFACE(uart_tx_if, i_data),
+             SERVER_NULLABLE_INTERFACE(uart_config_if, i_config),
              unsigned baud,
              uart_parity_t parity,
              unsigned bits_per_byte,
              unsigned stop_bits,
-             client output_gpio_if p_txd);
+             CLIENT_INTERFACE(output_gpio_if, p_txd));
 
 /** UART transmit interface (buffered).
  *
@@ -214,8 +251,13 @@ void uart_tx(server interface uart_tx_if i_data,
  *  manage the buffering.
  *
  */
+#ifndef __DOXYGEN__
 typedef interface uart_tx_buffered_if {
-
+#endif // __DOXYGEN__
+  /**
+   * \addtogroup uart_tx_buffered_if
+   * @{
+   */
   /** Write a byte to a UART.
    *
    *  This function writes a byte of data to a UART. It will place the
@@ -245,7 +287,10 @@ typedef interface uart_tx_buffered_if {
    *  can be filled by write() calls.
    */
   size_t get_available_buffer_size(void);
+  /**@} */ // end of uart_tx_buffered_if group
+#ifndef __DOXYGEN__
 } uart_tx_buffered_if;
+#endif // __DOXYGEN__
 
 /** UART transmitter (buffered).
  *
@@ -263,14 +308,14 @@ typedef interface uart_tx_buffered_if {
  *    \param p_txd         the gpio interface to output data on
  */
 [[combinable]]
-void uart_tx_buffered(server interface uart_tx_buffered_if i_data,
-                      server interface uart_config_if ?i_config,
-                      const static unsigned buffer_size,
+void uart_tx_buffered(SERVER_INTERFACE(uart_tx_buffered_if, i_data),
+                      SERVER_NULLABLE_INTERFACE(uart_config_if, i_config),
+                      const_static_unsigned buffer_size,
                       unsigned baud,
                       uart_parity_t parity,
                       unsigned bits_per_byte,
                       unsigned stop_bits,
-                      client output_gpio_if p_txd);
+                      CLIENT_INTERFACE(output_gpio_if, p_txd));
 
 /** Fast/Streaming UART TX.
  *
@@ -295,7 +340,7 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i_data,
  *                       100 Mhz reference clock then this value
  *                       should be at least 10.
  */
-void uart_tx_streaming(out port p, streaming chanend c, int ticks_per_bit);
+void uart_tx_streaming(out_port_t p, streaming_chanend_t c, int ticks_per_bit);
 
 /** Write a byte to a streaming UART transmitter.
  *
@@ -303,7 +348,7 @@ void uart_tx_streaming(out port p, streaming chanend c, int ticks_per_bit);
  *   \param c       chanend connected to the streaming UART Tx component
  *   \param data    The data to send.
  */
-void uart_tx_streaming_write_byte(streaming chanend c, uint8_t data);
+void uart_tx_streaming_write_byte(streaming_chanend_t c, uint8_t data);
 
 
 /*---------------------- Half Duplex API ---------------------------*/
@@ -315,14 +360,23 @@ typedef enum uart_half_duplex_mode_t {
 } uart_half_duplex_mode_t;
 
 /** Interface to control the mode of a half-duplex UART */
+#ifndef __DOXYGEN__
 typedef interface uart_control_if {
+#endif // __DOXYGEN__
+  /**
+   * \addtogroup uart_control_if
+   * @{
+   */
   /** Set the mode of the UART.
    *
    *  This function can be used to control whether the UART is in send or
    *  receive mode.
    */
   void set_mode(uart_half_duplex_mode_t mode);
+  /**@} */ // end of uart_control_if group
+#ifndef __DOXYGEN__
 } uart_control_if;
+#endif // __DOXYGEN__
 
 /** Half duplex UART.
  *
@@ -342,12 +396,12 @@ typedef interface uart_control_if {
  *  \param stop_bits      The number of stop bits
  *  \param p_uart         the 1-bit port to send/recieve the UART signals.
  */
-void uart_half_duplex(server interface uart_tx_buffered_if i_tx,
-                      server interface uart_rx_if i_rx,
-                      server interface uart_control_if i_control,
-                      server interface uart_config_if ?i_config,
-                      const static unsigned tx_buf_length,
-                      const static unsigned rx_buf_length,
+void uart_half_duplex(SERVER_INTERFACE(uart_tx_buffered_if, i_tx),
+                      SERVER_INTERFACE(uart_rx_if, i_rx),
+                      SERVER_INTERFACE(uart_control_if, i_control),
+                      SERVER_NULLABLE_INTERFACE(uart_config_if, i_config),
+                      const_static_unsigned tx_buf_length,
+                      const_static_unsigned rx_buf_length,
                       unsigned baud,
                       uart_parity_t parity,
                       unsigned bits_per_byte,
@@ -362,13 +416,19 @@ typedef enum multi_uart_read_result_t {
 } multi_uart_read_result_t;
 
 /** Multi-UART receive interface */
+#ifndef __DOXYGEN__
 interface multi_uart_rx_if {
+#endif // __DOXYGEN__
+  /**
+   * \addtogroup multi_uart_rx_if
+   * @{
+   */
 
   /** Initialize the multi-UART RX component.
    *
    *  \param   c    The chanend connected to the multi-UART RX task
    */
-  void init(streaming chanend c);
+  void init(streaming_chanend_t c);
 
   /** Read a byte for the next UART with ready data.
    *
@@ -380,7 +440,7 @@ interface multi_uart_rx_if {
    *  \param  data         The data byte read
    *  \returns             An enum type that indicates if the data is valid
    */
-  enum multi_uart_read_result_t read(size_t index, uint8_t &data);
+  enum multi_uart_read_result_t read(size_t index, REFERENCE_PARAM(uint8_t, data));
 
   /** Pause the multi-UART RX component for reconfiguration.
    *
@@ -435,12 +495,15 @@ interface multi_uart_rx_if {
    *                          range [1-8])
    */
   void set_bits_per_byte(size_t index, unsigned bits_per_byte);
+  /**@} */ // end of multi_uart_rx_if group
+#ifndef __DOXYGEN__
 } [[sametile]];
+#endif // __DOXYGEN__
 
 typedef interface multi_uart_rx_if multi_uart_rx_if;
 
 #pragma select handler
-inline void multi_uart_data_ready(streaming chanend c_rx, size_t &index);
+inline void multi_uart_data_ready(streaming_chanend_t c_rx, REFERENCE_PARAM(size_t, index));
 
 /** Multi-UART receiver.
  *
@@ -463,9 +526,9 @@ inline void multi_uart_data_ready(streaming chanend c_rx, size_t &index);
  *  \param  bits_per_byte   bits per byte (must be in the range [1-8])
  *  \param  stop_bits       number of stop bits
  */
-void multi_uart_rx(streaming chanend c,
-                   server interface multi_uart_rx_if i,
-                   in buffered port:32 p, clock clk,
+void multi_uart_rx(streaming_chanend_t c,
+                   SERVER_INTERFACE(multi_uart_rx_if, i),
+                   in_buffered_port_32_t p, clock clk,
                    size_t num_uarts,
                    unsigned clock_rate_hz,
                    unsigned baud,
@@ -474,7 +537,13 @@ void multi_uart_rx(streaming chanend c,
                    unsigned stop_bits);
 
 /** Multi-UART transmit interface */
+#ifndef __DOXYGEN__
 interface multi_uart_tx_if {
+#endif // __DOXYGEN__
+  /**
+   * \addtogroup multi_uart_tx_if
+   * @{
+   */
 
   /** Initialize the multi-UART TX component.
    *
@@ -557,7 +626,10 @@ interface multi_uart_tx_if {
    *                          range [1-8])
    */
   void set_bits_per_byte(size_t index, unsigned bits_per_byte);
+  /**@} */ // end of multi_uart_tx_if group
+#ifndef __DOXYGEN__
 } [[sametile]];
+#endif // __DOXYGEN__
 
 typedef interface multi_uart_tx_if multi_uart_tx_if;
 
@@ -580,8 +652,8 @@ typedef interface multi_uart_tx_if multi_uart_tx_if;
  *  \param  stop_bits       number of stop bits
  */
 void multi_uart_tx(chanend c,
-                   server interface multi_uart_tx_if i,
-                   out port p,
+                   SERVER_INTERFACE(multi_uart_tx_if, i),
+                   out_port_t p,
                    size_t num_uarts,
                    unsigned clock_rate_hz,
                    unsigned baud,

@@ -1,7 +1,32 @@
-.. include:: ../../../README.rst
+#################################
+lib_uart: UART peripheral library
+#################################
 
+***********
+Inroduction
+***********
+
+A software defined, industry-standard, UART (Universal Asynchronous
+Receiver/Transmitter) library
+that allows you to control a UART serial connection via the
+xCORE GPIO ports. This library is controlled
+via XC using the XMOS multicore extensions.
+
+``lib_uart`` is intended to be used with the `XCommon CMake <https://www.xmos.com/file/xcommon-cmake-documentation/?version=latest>`_
+, the `XMOS` application build and dependency management system.
+
+To use this library, include ``lib_uart`` in the application's ``APP_DEPENDENT_MODULES`` list in
+`CMakeLists.txt`, for example:
+
+.. code-block:: cmake
+
+    set(APP_DEPENDENT_MODULES "lib_uart")
+
+Applications should then include the ``uart.h`` header file.
+
+***************************
 External signal description
----------------------------
+***************************
 
 The UART signals used by the library are high in their idle state. The
 transmission of a character start with a *start bit* when the line
@@ -21,38 +46,46 @@ The start bit, data bits, parity bit and stop bits are all the same
 length (``tBIT`` in :ref:`uart_waveform`). This length is give by the BAUD
 rate which is the number of bits per second.
 
-Connecting to the xCORE device
-..............................
+Connecting to the `xcore` device
+================================
 
 If you are using the general UART Rx/Tx components then the UART line
 can be connected to a bit of any port. The other bits of the port can
 be shared using the GPIO library. Please refer to the GPIO library
 user guide for restrictions on sharing bits of a port (for example,
 all bits of a port need to be in the same direction - so UART rx and
-UART tx cannot be put on the same port).
+UART tx cannot be put on the same port, see :ref:`connect_standard`).
+
+.. _connect_standard:
 
 .. figure:: images/connect_standard.*
 
    UART Rx and Tx connections
 
-The half duplex UART needs to be connected to a 1-bit port.
+The half duplex UART needs to be connected to a 1-bit port (:ref:`connect_half_duplex`).
+
+.. _connect_half_duplex:
 
 .. figure:: images/connect_half_duplex.*
 
    UART half duplex connection
 
-|newpage|
-
 The fast/streaming UART also needs to be connect to a 1-bit port for
-TX or RX.
+TX or RX (:ref:`connect_fast`).
+
+.. _connect_fast:
 
 .. figure:: images/connect_fast.*
 
    Fast/Streaming UART connections
+  
+|newpage|
 
 The multi-UARTs need to be connected to 8-bit ports. If fewer than 8
 UARTs are required then an 8-bit port must still be used with some of
-the pins of the port not connected.
+the pins of the port not connected (:ref:`connect_multi`).
+
+.. _connect_multi:
 
 .. figure:: images/connect_multi.*
 
@@ -68,12 +101,16 @@ For multi-UART transmit, an incoming clock can also be used. The same
 clock signal can be shared between receive and transmit (i.e. only a
 single 1-bit port need be used).
 
+|newpage|
+
+*****
 Usage
------
+*****
 
 The are four ways to use the UART library detailed in the table below.
 
 .. list-table::
+ :widths: 20 80 
  :header-rows: 1
 
  * - UART type
@@ -97,28 +134,31 @@ The are four ways to use the UART library detailed in the table below.
      same core using a multibit port.
 
 All the UARTs use the XMOS multicore extensions to C (xC) to perform
-their operations, see the :ref:`XMOS Programming
-Guide<programming_guide>` for more details.
-
-|newpage|
+their operations, see the `XMOS Programming
+Guide` for more details.
 
 Standard UART usage
-...................
+===================
 
 UART components are instantiated as parallel tasks that run in a
 ``par`` statement. The application
 can connect via an interface connection using the ``uart_rx_if`` (for
 the UART Rx component) or the  ``uart_tx_if`` (for the UART Tx
-component). Both components also have an optional configuration
+component), see :ref:`uart_task_diag` for details.
+Both components also have an optional configuration
 interface that lets the application change the speed and properties of
 the UART at run time.
+
+.. _uart_task_diag:
 
 .. figure:: images/uart_task_diag.*
 
   UART task diagram
 
 For example, the following code instantiates a UART rx and UART tx
-component and connects to them::
+component and connects to them:
+
+.. code-block:: C
 
   // Port declarations
   port p_uart_rx = on tile[0] : XS1_PORT_1A;
@@ -149,10 +189,10 @@ The ``output_gpio`` task and ``input_gpio_with_events`` tasks are part
 of the GPIO library for flexible use of multi-bit ports. See the GPIO
 library user guide for details.
 
-|newpage|
-
 The application can use the client end of the interface connection to
-perform UART operations e.g.::
+perform UART operations e.g.:
+
+.. code-block:: C
 
   void my_application(client uart_tx_if uart_tx,
                       client uart_rx_if uart_rx) {
@@ -164,31 +204,35 @@ perform UART operations e.g.::
        case uart_rx.data_ready():
           uint8_t data = uart_rx.read();
           printf("Data received %d\n", data);
-          ...
+          // ...
           break;
      }
   }
 
 UART configuration
-~~~~~~~~~~~~~~~~~~
+------------------
 
 The ``uart_config_if`` connection can be optionally connected to
-either the UART Rx or Tx task e.g.::
+either the UART Rx or Tx task e.g.:
 
-    ...
+.. code-block:: C
+
+    // ...
     interface uart_tx_if i_tx;
     interface uart_cfg_if i_tx_cfg;
     input_gpio_if i_gpio_rx[1];
     par {
-      ...
+      // ...
       on tile[0]: uart_tx(i_tx, i_tx_cfg,
                           115200, UART_PARITY_NONE, 8, 1,
                           i_gpio_tx[0]);
       on tile[0]: app(i_tx, i_rx_cfg);
-      ...
+      // ...
 
 The application can use this interface to dynamically reconfigure the
-UART e.g.::
+UART e.g.:
+
+.. code-block:: C
 
    void app(client uart_tx_if uart_tx,
             client uart_config_if uart_tx_cfg) {
@@ -196,13 +240,13 @@ UART e.g.::
        uart_tx_cfg.set_baud_rate(9600);
        // Write to the UART
        uart_tx.write(0xff);
-       ...
+       // ...
 
 If runtime configuration is not required then ``null`` can be passed
 into the task instead of an interface connection.
 
 Transmit buffering
-~~~~~~~~~~~~~~~~~~
+------------------
 
 There are two types of standard UART tx task: buffered and
 un-buffered.
@@ -218,18 +262,22 @@ The unbuffered UART does not take its own logical core but calls to
 ``write`` will block until the character has been sent.
 
 Fast/Streaming UART usage
-.........................
+=========================
 
 The fast/streaming UART components are
 instantiated as parallel tasks that run in a
-``par`` statement. The can connect via a streaming channel.
+``par`` statement and connected to the application via streaming channels (:ref:`fast_uart_task_diag`).
+
+.. _fast_uart_task_diag:
 
 .. figure:: images/fast_uart_task_diag.*
 
   Fast/streaming UART task diagram
 
 For example, the following code instantiates a strreaming UART rx and UART tx
-component and connects to them::
+component and connects to them:
+
+.. code-block:: C
 
   // Port declarations
   in port p_uart_rx = on tile[0] : XS1_PORT_1A;
@@ -253,7 +301,9 @@ The streaming channel has a limited amount of buffering
 data as soon as it arrives.
 
 The application can interact with the component using the
-fast/streaming UART functions (see :ref:`fast_uart_api`) e.g.::
+fast/streaming UART functions (see :ref:`fast_uart_api`) e.g.:
+
+.. code-block:: C
 
   void app(streaming chanend c_tx, streaming chanend c_rx)
   {
@@ -266,23 +316,27 @@ fast/streaming UART functions (see :ref:`fast_uart_api`) e.g.::
 |newpage|
 
 Half-duplex UART usage
-......................
+======================
 
 The half-duplex components are instantiated as parallel tasks that run in a
 ``par`` statement. The application
 connects via three interface connections: the ``uart_rx_if`` (for
 receiving data), the ``uart_tx_if`` (for transmitting data) and the
-``uart_control_if`` (for controlling the current direction of the UART).
+``uart_control_if`` (for controlling the current direction of the UART)(:ref:`half_duplex_task_diag`).
 The component also has an optional configuration
 interface that lets the application change the speed and properties of
 the UART at run time.
+
+.. _half_duplex_task_diag:
 
 .. figure:: images/half_duplex_task_diag.*
 
   Half-duplex UART task diagram
 
 For example, the following code instantiates a half-duplex UART
-component and connects to it::
+component and connects to it:
+
+.. code-block:: C
 
   #define TX_BUFFER_SIZE 16
   #define RX_BUFFER_SIZE 16
@@ -303,7 +357,9 @@ component and connects to it::
     }
 
 The application can use the interfaces in the same manner as a
-standard UART. The control interface can be used to change direction e.g.::
+standard UART. The control interface can be used to change direction e.g.:
+
+.. code-block:: C
 
   void app(client uart_rx_if i_uart_rx,
            client uart_tx_buffered_if i_uart_tx,
@@ -318,22 +374,26 @@ standard UART. The control interface can be used to change direction e.g.::
 |newpage|
 
 Multi-UART usage
-................
+================
 
 Multi-UART components are instantiated as parallel tasks that run in a
 ``par`` statement. The application
 can connect via a combination of a channel and
 an interface connection using the ``multi_uart_rx_if``
 (for the UART Rx component) or the  ``multi_uart_tx_if`` (for the UART Tx
-component). These interfaces handle data for all the UARTS and runtime
-configuration.
+component). These interfaces handle data for all the UARTs and runtime
+configuration (:ref:`multi_uart_task_diag`).
+
+.. _multi_uart_task_diag:
 
 .. figure:: images/multi_uart_task_diag.*
 
   Multi-UART task diagram
 
 For example, the following code instantiates a multi-UART RX and multi-UART TX
-component and connects to them::
+component and connects to them:
+
+.. code-block:: C
 
   in  buffered port:32 p_uart_rx = XS1_PORT_8A;
   out buffered port:8 p_uart_tx  = XS1_PORT_8B;
@@ -366,7 +426,9 @@ component and connects to them::
 
 |newpage|
 The application communicates with all the UARTs via the single
-multi-UART interfaces e.g.::
+multi-UART interfaces e.g.:
+
+.. code-block:: C
 
   void loopback(streaming chanend c_rx, client multi_uart_rx_if i_rx,
                 chanend c_tx, client multi_uart_tx_if i_tx)
@@ -399,11 +461,13 @@ Note that the ``init`` function on the interface must be called once
 before any use of the interface.
 
 Configuring clocks for multi-UARTs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 The ports used for the multi-UART components need to have their clocks
 configured. For example, the following code configures the multi-UART
-RX port to run of a clock that is sourced by an incoming port::
+RX port to run of a clock that is sourced by an incoming port:
+
+.. code-block:: C
 
     // Set the rx line to be clocked off the clk_uart clock block
     configure_in_port(p_uart_rx, clk_uart);
@@ -413,7 +477,7 @@ RX port to run of a clock that is sourced by an incoming port::
     start_clock(clk_uart);
 
 For more information on configuring ports, please refer to the
-:ref:`XMOS Programming Guide<programming_guide>` for more details.
+`XMOS Programming Guide` for more details.
 
 The multi-UART components take an argument which is the speed of the
 underlying clock. This way the component can attain the correct BAUD
@@ -429,150 +493,146 @@ with this clock rate.
 |newpage|
 
 Runtime configuration of the Multi-UARTs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------
 
 The re-configuration of a one of the UARTS in the multi-UART is done
 via the main ``multi_uart_tx_if`` or ``multi_uart_rx_if``. In both
 cases, the user must call the ``pause`` function of the interface,
 then a reconfiguration function and then the ``restart`` function
-e.g.::
+e.g.:
+
+.. code-block:: C
 
   void app(streaming chanend c_rx, client multi_uart_rx_if i_rx)
-    ...
+    // ...
     i_rx.pause();
     // Set UART number 2 to baud rate 9600
     i_rx.set_baud_rate(2, 9600);
     i_rx.restart();
-    ....
+    // ...
+
+*********
+UART APIs
+*********
 
 Standard UART API
------------------
-
+=================
 
 UART configuration interface
-............................
+----------------------------
 
-.. doxygeninterface:: uart_config_if
-
-|newpage|
+.. doxygengroup:: uart_config_if
+  :no-link:
 
 .. doxygenenum:: uart_parity_t
 
 |newpage|
 
 UART receiver component
-.......................
+-----------------------
 
 .. doxygenfunction:: uart_rx
 
 |newpage|
 
 UART receive interface
-......................
+----------------------
 
-.. doxygeninterface:: uart_rx_if
+.. doxygengroup:: uart_rx_if
+  :no-link:
 
 |newpage|
 
 UART transmitter components
-...........................
+---------------------------
 
 .. doxygenfunction:: uart_tx
-
-|newpage|
-
 .. doxygenfunction:: uart_tx_buffered
 
 |newpage|
 
 UART transmit interface
-.......................
+-----------------------
 
-.. doxygeninterface:: uart_tx_if
-
-|newpage|
+.. doxygengroup:: uart_tx_if
+  :no-link:
 
 UART transmit interface (buffered)
-..................................
+----------------------------------
 
-.. doxygeninterface:: uart_tx_buffered_if
+.. doxygengroup:: uart_tx_buffered_if
+  :no-link:
 
 |newpage|
 
 .. _fast_uart_api:
 
 Fast/Streaming API
------------------------
+==================
 
 Streaming receiver
-..................
+------------------
 
 .. doxygenfunction:: uart_rx_streaming
 .. doxygenfunction:: uart_rx_streaming_read_byte
 
+|newpage|
+
 Streaming transmitter
-.....................
+---------------------
 
 .. doxygenfunction:: uart_tx_streaming
 .. doxygenfunction:: uart_tx_streaming_write_byte
 
+|newpage|
+
 Half-Duplex API
----------------
+===============
 
 Half-duplex component
-.....................
+---------------------
 
 .. doxygenfunction:: uart_half_duplex
 
-|newpage|
-
 Half-duplex control interface
-.............................
+-----------------------------
 
 .. doxygenenum:: uart_half_duplex_mode_t
 
-.. doxygeninterface:: uart_control_if
+.. doxygengroup:: uart_control_if
+  :no-link:
 
+|newpage|
 
 Multi-UART API
---------------
+==============
 
 Multi-UART receiver
-...................
+-------------------
 
 .. doxygenfunction:: multi_uart_rx
 
 |newpage|
 
 Multi-UART receive interface
-............................
+----------------------------
 
 .. doxygenenum:: multi_uart_read_result_t
 
-.. doxygeninterface:: multi_uart_rx_if
+.. doxygengroup:: multi_uart_rx_if
+  :no-link:
 
 |newpage|
 
 Multi-UART transmitter
-......................
+----------------------
 
 .. doxygenfunction:: multi_uart_tx
 
 |newpage|
 
 Multi-UART transmit interface
-.............................
+-----------------------------
 
-.. doxygeninterface:: multi_uart_tx_if
-
-|newpage|
-
-|appendix|
-
-Known Issues
-------------
-
-No known issues.
-
-.. include:: ../../../CHANGELOG.rst
-
+.. doxygengroup:: multi_uart_tx_if
+  :no-link:

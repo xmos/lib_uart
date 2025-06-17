@@ -1,5 +1,5 @@
-UART Library Change Log
-=======================
+lib_uart change log
+===================
 
 UNRELEASED
 ----------
