@@ -4,8 +4,17 @@ lib_uart change log
 UNRELEASED
 ----------
 
+  * ADDED:   Support for XCommon CMake
+  * CHANGED: Use XMOS Public Licence Version 1
+  * CHANGED: Example applications run on xcore.ai hardware
   * FIXED: Added an idle state initialisation in uart_tx_streaming()
   * FIXED: Fixed ILLEGAL_INSTRUCTION exception when using multi_uart_rx()
+
+  * Changes to dependencies:
+
+    - lib_xassert: 3.0.0 -> 4.3.1
+    - lib_gpio: 1.1.0 -> 2.2.0
+    - lib_logging: 2.1.0 -> 3.3.1
 
 3.1.0
 -----
