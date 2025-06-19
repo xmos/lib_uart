@@ -1,6 +1,6 @@
 // This file relates to internal XMOS infrastructure and should be ignored by external users
 
-@Library('xmos_jenkins_shared_library@v0.38.0') _
+@Library('xmos_jenkins_shared_library@v0.39.0') _
 
 getApproval()
 
@@ -35,7 +35,12 @@ pipeline {
           name: 'XMOSDOC_VERSION',
           defaultValue: 'v7.1.0',
           description: 'The xmosdoc version'
-        )
+    )
+    string(
+      name: 'INFR_APPS_VERSION',
+      defaultValue: 'v2.1.0',
+      description: 'The infr_apps version'
+    )
   }
   environment {
     REPO = "lib_uart"
@@ -59,6 +64,9 @@ pipeline {
       steps {
         dir("${REPO}") {
           buildDocs()
+        }
+        warnError("lib checks") {
+          runLibraryChecks("${WORKSPACE}/${REPO}", "${params.INFR_APPS_VERSION}")
         }
       }
     }// Docs

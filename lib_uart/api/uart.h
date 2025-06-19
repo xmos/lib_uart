@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2018, XMOS Ltd, All rights reserved
+// Copyright 2014-2025 XMOS LIMITED.
+// This Software is subject to the terms of the XMOS Public Licence: Version 1.
 
 #ifndef _uart_h_
 #define _uart_h_
