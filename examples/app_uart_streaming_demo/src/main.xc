@@ -7,8 +7,8 @@
 #include <stddef.h>
 
 // Port declarations
-in port p_uart_rx = on tile[0] : XS1_PORT_1A;
-out port p_uart_tx = on tile[0] : XS1_PORT_1B;
+in port p_uart_rx = on tile[0] : XS1_PORT_1J;
+out port p_uart_tx = on tile[0] : XS1_PORT_1M;
 
 /* This function performs the main "application" that outputs and reads
    some bytes over UART */
