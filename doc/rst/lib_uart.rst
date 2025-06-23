@@ -511,6 +511,78 @@ e.g.:
     i_rx.restart();
     // ...
 
+********
+Examples
+********
+
+Various example application are provided alongside the ``lib_uart`` which demonstrates the use of the different UART components. 
+These examples can be found in the ``examples`` directory of the library.
+All examples provided run on `XK-EVK-XU316 <https://www.xmos.com/xk-evk-xu316>`_ board.
+
+Basic and Streaming UART examples
+=================================
+
+The basic and streaming UART examples demonstrate the use of the API to loopback data
+between the UART Tx and Rx components. The examples are designed to be run on a
+single tile with the UART connection between the *XS1_PORT_1J* and *XS1_PORT_1M* ports (shared with *WIFI MOSI* and *WIFI MISO* on *XK-EVK-XU316*).
+So make sure to connect these pins with a jumper wire for the example to work.
+
+Multi-UART example
+==================
+
+The multi-UART example demonstrates the use of the multi-UART API to loopback data between multi-UART Tx and Rx components .
+This example requires 2 8-bit ports and a shared clock.
+The ports chosen are *XS1_PORT_8B* on tile 0 (*X0D14* - *X0D21* in the top left header) and *XS1_PORT_8A* on tile 1 (*X1D02* - *X1D08* in the bottom left header and *CODEC RST_N* which is *X1D09*).
+The application will generate a PLL clock on *MCLK* (*X1D11*) which needs to be shared with tile 0 *XS1_PORT_1A* (*X0D00*) port.
+Make sure to connect 8-bit ports and the share the clock for the example to work.
+
+Running the examples
+====================
+
+This section will describe how to build and run the example applications provided with the ``lib_uart`` library. 
+The application chosen for this section is the ``app_uart_demo`` which demonstrates the use of the standard UART API.
+For other examples, the process is similar, but the application/folder name will change.
+
+Building
+--------
+
+The following section assumes that the `XMOS XTC tools <https://www.xmos.com/software-tools/>`_ has
+been downloaded and installed (see `README` for required version).
+
+Installation instructions can be found `here <https://xmos.com/xtc-install-guide>`_. Particular
+attention should be paid to the section `Installation of required third-party tools
+<https://www.xmos.com/documentation/XM-014363-PC-10/html/installation/install-configure/install-tools/install_prerequisites.html>`_.
+
+The application uses the `XMOS` build and dependency system, `xcommon-cmake <https://www.xmos.com/file/xcommon-cmake-documentation/?version=latest>`_. `xcommon-cmake` is bundled with the `XMOS` XTC tools.
+
+To configure the build, run the following from an XTC command prompt:
+
+.. code-block:: console
+
+  cd examples
+  cd app_uart_demo
+  cmake -G "Unix Makefiles" -B build
+
+Any missing dependencies will be downloaded by the build system at this configure step.
+
+Finally, the application binaries can be built using ``xmake``:
+
+.. code-block:: console
+
+  xmake -j -C build
+
+Running the application
+-----------------------
+
+To run the application return to the ``/examples/app_uart_demo`` directory and run
+the following command:
+
+.. code-block:: console
+
+  xrun --xscope bin/app_uart_demo.xe
+
+As application runs and loopbacks data between the UART Tx and Rx components, it will print the received data to the console.
+
 *********
 UART APIs
 *********

@@ -7,8 +7,8 @@
 #include <stddef.h>
 
 // Port declarations
-port p_uart_rx = on tile[0] : XS1_PORT_1A;
-port p_uart_tx = on tile[0] : XS1_PORT_1B;
+port p_uart_rx = on tile[0] : XS1_PORT_1J;
+port p_uart_tx = on tile[0] : XS1_PORT_1M;
 
 #define BAUD_RATE 115200
 #define RX_BUFFER_SIZE 64
