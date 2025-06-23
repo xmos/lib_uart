@@ -5,7 +5,7 @@ lib_uart: UART peripheral library
 #################################
 
 :vendor: XMOS
-:version: 3.1.0
+:version: 3.2.0
 :scope: General Use
 :description: UART peripheral library
 :category: General Purpose

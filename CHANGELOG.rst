@@ -1,8 +1,8 @@
 lib_uart change log
 ===================
 
-UNRELEASED
-----------
+3.2.0
+-----
 
   * ADDED:   Support for XCommon CMake
   * CHANGED: Use XMOS Public Licence Version 1
@@ -12,9 +12,11 @@ UNRELEASED
 
   * Changes to dependencies:
 
-    - lib_xassert: 3.0.0 -> 4.3.1
     - lib_gpio: 1.1.0 -> 2.2.0
+
     - lib_logging: 2.1.0 -> 3.3.1
+
+    - lib_xassert: 3.0.0 -> 4.3.1
 
 3.1.0
 -----
@@ -26,6 +28,14 @@ UNRELEASED
   * RESOLVED: Improved the uart_tx_buffered so that it can now drive at full
     data rate without clock drift. Before it was limited to about 0.5% less than
     the baud rate
+
+  * Changes to dependencies:
+
+    - lib_gpio: 1.0.0 -> 1.1.0
+
+    - lib_logging: 2.0.0 -> 2.1.0
+
+    - lib_xassert: 2.0.0 -> 3.0.0
 
 3.0.3
 -----
