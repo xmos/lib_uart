@@ -11,6 +11,8 @@ documentation:
   substitutions_path: doc/substitutions.inc
   root_doc: doc/rst/lib_uart.rst
   linkcheck_ignore_regex: ['']
+  latex_toc_depth: 3
+  latex_secnum_depth: 3
   cognidox_part_number: XM-006381-UG
   doxygen_projects:
     lib_uart:
