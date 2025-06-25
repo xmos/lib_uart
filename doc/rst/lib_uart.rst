@@ -8,9 +8,43 @@ Inroduction
 
 A software defined, industry-standard, UART (Universal Asynchronous
 Receiver/Transmitter) library
-that allows you to control a UART serial connection via the
-xCORE GPIO ports. This library is controlled
+that allows the user to control a UART serial connection via the
+xcore GPIO ports. This library is controlled
 via XC using the XMOS multicore extensions.
+
+|newpage|
+
+``lib_uart`` components
+=======================
+
+There are four ways to use the UART library detailed in the table below.
+
+.. list-table::
+ :widths: 20 80 
+ :header-rows: 1
+
+ * - UART type
+   - Description
+ * - Standard
+   - Standard UARTs provide a flexible, fully configurable UART for
+     speeds up to 115200 baud. The UART connects to ports via the GPIO
+     library so can be used with single bits of
+     multi-bit ports. Transmit can be buffered or unbuffered. The UART
+     components run on a logical core but are combinable so can be
+     run with other tasks on the same core (though the timing may be affected).
+ * - Fast/streaming
+   - The fast/streaming UART components provide a fixed configuration
+     fast UART that streams data in and out via a streaming channel.
+ * - Half-duplex
+   - The half-duplex component performs receive and transmit on the
+     same data line. The application controls the direction of the
+     UART at runtime. It is particularly useful for RS485 connections.
+ * - Multi-UART
+   - The multi-UART components efficiently run several UARTS on the
+     same core using a multibit port.
+
+Using ``lib_uart``
+==================
 
 ``lib_uart`` is intended to be used with the `XCommon CMake <https://www.xmos.com/file/xcommon-cmake-documentation/?version=latest>`_
 , the `XMOS` application build and dependency management system.
@@ -49,7 +83,7 @@ rate which is the number of bits per second.
 Connecting to the `xcore` device
 ================================
 
-If you are using the general UART Rx/Tx components then the UART line
+If using the standard UART Rx/Tx components then the UART line
 can be connected to a bit of any port. The other bits of the port can
 be shared using the GPIO library. Please refer to the GPIO library
 user guide for restrictions on sharing bits of a port (for example,
@@ -93,9 +127,9 @@ the pins of the port not connected (:ref:`connect_multi`).
 
 For multi-UART receive, an incoming clock is required to acheive
 standard baud rates. The clock should be a multiple of the maximum
-BAUD rate required e.g. a 1843200Khz oscillator is a multiple of
+BAUD rate required e.g. a 1843200 Hz oscillator is a multiple of
 115200 baud (and lower rates also). The maximum allowable incoming
-signal is 1843200Khz.
+signal is 1843200 Hz.
 
 For multi-UART transmit, an incoming clock can also be used. The same
 clock signal can be shared between receive and transmit (i.e. only a
@@ -107,35 +141,7 @@ single 1-bit port need be used).
 Usage
 *****
 
-The are four ways to use the UART library detailed in the table below.
-
-.. list-table::
- :widths: 20 80 
- :header-rows: 1
-
- * - UART type
-   - Description
- * - Standard
-   - Standard UARTs provide a flexible, fully configurable UART for
-     speeds up to 115200 baud. The UART connects to ports via the GPIO
-     library so can be used with single bits of
-     multi-bit ports. Transmit can be buffered or unbuffered. The UART
-     components runs on a logical core but are combinable so can be
-     run with other tasks on the same core (though the timing may be affected).
- * - Fast/streaming
-   - The fast/streaming UART components provide a fixed configuration
-     fast UART that streams data in and out via a streaming channel.
- * - Half-duplex
-   - The half-duplex component performs receive and transmit on the
-     same data line. The application controls the direction of the
-     UART at runtime. It is particularly useful for RS485 connections (link?)
- * - Multi-UART
-   - The multi-UART components efficiently run several UARTS on the
-     same core using a multibit port.
-
-All the UARTs use the XMOS multicore extensions to C (xC) to perform
-their operations, see the `XMOS Programming
-Guide` for more details.
+The following sections describe the four ways to use the UART library.
 
 Standard UART usage
 ===================
@@ -186,8 +192,8 @@ component and connects to them:
   }
 
 The ``output_gpio`` task and ``input_gpio_with_events`` tasks are part
-of the GPIO library for flexible use of multi-bit ports. See the GPIO
-library user guide for details.
+of the GPIO library for flexible use of multi-bit ports.
+See the `GPIO library user guide <https://www.xmos.com/file/lib_gpio>`_ for details.
 
 The application can use the client end of the interface connection to
 perform UART operations e.g.:
@@ -260,6 +266,8 @@ transmitted and that there is more space in the buffer by calling the
 
 The unbuffered UART does not take its own logical core but calls to
 ``write`` will block until the character has been sent.
+
+|newpage|
 
 Fast/Streaming UART usage
 =========================
@@ -487,7 +495,7 @@ The multi-UART RX component must be clocked of a rate which is a
 multiple of the BAUD rates required.
 
 If a port is not explicitly configured, then it will be clocked of the
-reference 100Mhz clock of the xCORE. The TX component can also work
+reference 100Mhz clock of the xcore. The TX component can also work
 with this clock rate.
 
 |newpage|
@@ -531,7 +539,7 @@ Multi-UART example
 ==================
 
 The multi-UART example demonstrates the use of the multi-UART API to loopback data between multi-UART Tx and Rx components .
-This example requires 2 8-bit ports and a shared clock.
+This example requires two 8-bit ports and a shared clock.
 The ports chosen are *XS1_PORT_8B* on tile 0 (*X0D14* - *X0D21* in the top left header) and *XS1_PORT_8A* on tile 1 (*X1D02* - *X1D08* in the bottom left header and *CODEC RST_N* which is *X1D09*).
 The application will generate a PLL clock on *MCLK* (*X1D11*) which needs to be shared with tile 0 *XS1_PORT_1A* (*X0D00*) port.
 Make sure to connect 8-bit ports and the share the clock for the example to work.
